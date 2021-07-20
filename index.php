@@ -14,7 +14,7 @@ $html = curl_exec($ch);
 curl_close($ch);
 **/
 
-$model = 'bottom';
+$model = 'bottom'; // change here to change mode (bottom or right)
 
 if(isset($_GET["model"]) == true)
 {

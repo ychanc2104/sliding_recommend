@@ -1,10 +1,13 @@
 <?php
-$web_id   = filter_var($_GET["web_id"], FILTER_SANITIZE_STRING);
-$model    = filter_var($_GET["model"], FILTER_SANITIZE_STRING); //模式 bottom=底部滑上來, right=右邊滑出來
-$uuid     = filter_var($_GET["uuid"], FILTER_SANITIZE_STRING);
-$title    = filter_var($_GET["title"], FILTER_SANITIZE_STRING);
-$url      = filter_var($_GET["url"], FILTER_SANITIZE_STRING);
-$meta_url = filter_var($_GET["meta_url"], FILTER_SANITIZE_STRING);
+$web_id         = filter_var($_GET["web_id"], FILTER_SANITIZE_STRING);
+$model          = filter_var($_GET["model"], FILTER_SANITIZE_STRING); //模式 bottom=底部滑上來, right=右邊滑出來
+$uuid           = filter_var($_GET["uuid"], FILTER_SANITIZE_STRING);
+$title          = filter_var($_GET["title"], FILTER_SANITIZE_STRING);
+$url            = filter_var($_GET["url"], FILTER_SANITIZE_STRING);
+$meta_url       = filter_var($_GET["meta_url"], FILTER_SANITIZE_STRING);
+$website_type   = filter_var($_GET["website_type"], FILTER_SANITIZE_STRING);
+$recommend_type = filter_var($_GET["recommend_type"], FILTER_SANITIZE_STRING);
+
 
 if(empty($model) == true)
 {
@@ -18,6 +21,7 @@ if($model == 'right')
     $recommend_iframe_css = 'right_recommend_iframe';
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -106,6 +110,8 @@ if($model == 'right')
     </div>
 
     <script type="text/javascript">
+
+    console.log('start');
     $(function() {
         default_init();
 
@@ -456,29 +462,46 @@ if($model == 'right')
     //抓猜你喜歡
     function get_like(top)
     {
-        var web_id   = '<?php echo $web_id; ?>';
-        var uuid     = '<?php echo $uuid; ?>'; 
-        var title    = '<?php echo $title; ?>'; 
-        var url      = '<?php echo $url; ?>'; 
-        var meta_url = '<?php echo $meta_url; ?>';
+        var web_id         = '<?php echo $web_id; ?>';
+        var uuid           = '<?php echo $uuid; ?>'; 
+        var title          = '<?php echo $title; ?>'; 
+        var url            = '<?php echo $url; ?>'; 
+        var meta_url       = '<?php echo $meta_url; ?>';
+        var website_type   = '<?php echo $website_type; ?>';
+        var recommend_type = '<?php echo $recommend_type; ?>';
+        const type         = 'guess';
         
+
+        // var web_id   = 'underwear';
+        // var title    = ''
+        console.log('getlike look web_id is '+web_id)
+
         $('#recommend_body_div').html(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(255, 255, 255); display: block; shape-rendering: auto; margin-top: 150px" width="30px" height="30px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
             <circle cx="50" cy="50" r="32" stroke-width="8" stroke="#fe718d" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
             <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0 50 50;360 50 50"></animateTransform>
             </circle>
         </svg>`);
 
-        $.getJSON('https://rhea-cdn.advividnetwork.com/api/ecomEmbeddedRecommendation?web_id='+web_id+'&uuid='+uuid+'&title='+title+'&url='+url+'&meta_url='+meta_url+'&footId=&type=belt1', function(callback) {
+        // https://rhea-cdn.advividnetwork.com/api/productEcom?web_id=underwear&type=guess&title=default
+        // $.getJSON('https://rhea-cdn.advividnetwork.com/api/ecomEmbeddedRecommendation?web_id='+web_id+'&uuid='+uuid+'&title='+title+'&url='+url+'&meta_url='+meta_url+'&footId=&type=belt1', function(callback) {
+        // $.getJSON('https://rhea-cdn.advividnetwork.com/api/productEcom?web_id='+web_id+'&title='+title+'&type=guess', function(callback) {
+        $.getJSON(get_api_route(website_type, recommend_type, web_id, title, type), function(callback) {
             if(callback === '_')
             {
+                console.log(callback)
+
                 return false;
             }
 
             $('#recommend_body_div').html('');
-
+            //
+            console.log(callback);
+            console.log('test merge');
+            console.log(merge_article_ad(callback));
+            // 
             var i = 0;
 
-            $.each(callback, function(key, value) {
+            $.each(merge_article_ad(callback), function(key, value) {
                 if(key == "item_list")
                 {
                     return false;
@@ -494,9 +517,9 @@ if($model == 'right')
 
                 html += `
                         <div class="col-6 `+div_class+`">
-                            <a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn"><img src="`+value['image']+`" class="w-100" style="z-index:1"></a>
+                            <a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
                             <h6 class="title"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['title']+`</a></h6>
-                            <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['content']+`</a></div>
+                            <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['description']+`</a></div>
                         </div>`;
                 
 
@@ -523,11 +546,16 @@ if($model == 'right')
     //其他人也看了
     function get_other(top)
     {
-        var web_id   = '<?php echo $web_id; ?>';
-        var uuid     = '<?php echo $uuid; ?>'; 
-        var title    = '<?php echo $title; ?>'; 
-        var url      = '<?php echo $url; ?>'; 
-        var meta_url = '<?php echo $meta_url; ?>';
+        var web_id         = '<?php echo $web_id; ?>';
+        var uuid           = '<?php echo $uuid; ?>'; 
+        var title          = '<?php echo $title; ?>'; 
+        var url            = '<?php echo $url; ?>'; 
+        var meta_url       = '<?php echo $meta_url; ?>';
+        var website_type   = '<?php echo $website_type; ?>';
+        var recommend_type = '<?php echo $recommend_type; ?>';
+        const type         = 'also';
+
+        console.log('others look web_id is '+web_id)
 
         $('#recommend_body_div').html(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(255, 255, 255); display: block; shape-rendering: auto; margin-top: 150px" width="30px" height="30px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
             <circle cx="50" cy="50" r="32" stroke-width="8" stroke="#fe718d" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
@@ -535,7 +563,9 @@ if($model == 'right')
             </circle>
         </svg>`);
 
-        $.getJSON('https://rhea-cdn.advividnetwork.com/api/ecomEmbeddedRecommendation?web_id='+web_id+'&uuid='+uuid+'&title='+title+'&url='+url+'&meta_url='+meta_url+'&footId=&type=belt2', function(callback) {
+        // $.getJSON('https://rhea-cdn.advividnetwork.com/api/ecomEmbeddedRecommendation?web_id='+web_id+'&uuid='+uuid+'&title='+title+'&url='+url+'&meta_url='+meta_url+'&footId=&type=belt2', function(callback) {
+        // $.getJSON('https://rhea-cdn.advividnetwork.com/api/productEcom?web_id='+web_id+'&title='+title+'&type=guess', function(callback) {
+        $.getJSON(get_api_route(website_type, recommend_type, web_id, title, type), function(callback) {
             if(callback === '_')
             {
                 return false;
@@ -545,7 +575,7 @@ if($model == 'right')
 
             var i = 0;
 
-            $.each(callback, function(key, value) {
+            $.each(merge_article_ad(callback), function(key, value) {
                 if(key == "item_list")
                 {
                     return false;
@@ -561,9 +591,9 @@ if($model == 'right')
 
                 html += `
                         <div class="col-6 `+div_class+`">
-                            <a href="javascript:void(0)"><img src="`+value['image']+`" class="w-100"></a>
+                            <a href="javascript:void(0)"><img src="`+value['image_url']+`" class="w-100"></a>
                             <h6 class="title"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['title']+`</a></h6>
-                            <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['content']+`</a></div>
+                            <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['description']+`</a></div>
                         </div>`;
                 
 
@@ -578,6 +608,46 @@ if($model == 'right')
             $(".body_row_one").css('margin-top', top);
         }
     }
+
+    // recommend_type: 1 for own article, 2 for other e-comm; website_type: 1 for media, 2 for blog, 3 for e-comm
+    function get_api_route(website_type, recommend_type, web_id, title, type)
+    {
+        if (website_type == 3) // E-commerce must recommend e-comm
+        {
+            route = 'https://rhea-cdn.advividnetwork.com/api/productEcom?web_id='+web_id+'&title='+title+'&type='+type;
+        }
+        else if (website_type == 1 || website_type == 2 && recommend_type == 1) // media or blog + recommend article
+        {
+            route = 'https://rhea-cdn.advividnetwork.com/api/articleMedia?web_id='+web_id+'&title='+title+'&type='+type;
+        }
+        else if (website_type == 1 || website_type == 2 && recommend_type == 2) // media or blog + recommend e-comm
+        {
+            route = 'https://rhea-cdn.advividnetwork.com/api/productMedia?web_id='+web_id+'&title='+title+'&type='+type;
+        }
+        else // nothing
+        {
+            route = '_';
+        }
+        return route
+    }
+
+    function merge_article_ad(article_ad)
+    {
+        // article_ad = JSON.parse(article_ad);
+        article = article_ad['article'];
+        // console.log(article)
+        ad = article_ad['ad'];
+        // console.log(ad);
+        for (let i=0; i<ad.length; i++) {
+            index = Math.floor(Math.random() * article.length);
+            article.splice(index, 0, ad[i])
+        }
+        // article.push(ad)
+        // console.log(article);
+        // result = Array.prototype.push.apply(article, ad);
+        return article;
+    }
+
     </script>
 </body>
 </html>
