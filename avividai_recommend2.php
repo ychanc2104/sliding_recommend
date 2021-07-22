@@ -115,7 +115,7 @@ if($model == 'right')
 
     $(function() {
         default_init();
-
+        var lastPosY = null;
         var model = '<?php echo $model; ?>';
         var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
         console.log('fully height is '+ height);
@@ -132,18 +132,21 @@ if($model == 'right')
 
 
 
-
-        $(window).on('mouseup', function(e) {
-        // $(window).on('touchend', function(e) {    
+        
+        // $(window).on('vmouseup', function(e) {
+        $(window).on('click touchend', function(e) {    
             /* stop moving when mouse button is released:*/
 
-            $(window).unbind('mousemove');
-            // $(window).unbind('touchmove');
+            // $(window).unbind('vmousemove');
+            
+            // var posY = e.originalEvent.touches[0].screenY;
+            console.log('touchend: '+lastPosY)
+            const criteria = lastPosY/3;
+            console.log('touchend: when mouse height is greater than ' +criteria + ' fully open')
 
-            const criteria = e.screenY/3;
-            console.log('when mouse height is greater than ' +criteria + 'fully open')
+            $(window).unbind('touchmove');
             // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
-            if (window.outerHeight - e.screenY < criteria)
+            if (window.outerHeight - lastPosY < criteria)
             // if (window.outerHeight - e.screenY < 600)
 
             {
@@ -188,9 +191,10 @@ if($model == 'right')
 
         
         //開啟集合頁
-        $(window).on('mousedown', function(e) {
-        // $(window).on('touchstart', function(e) {    
+        // $(window).on('vmousedown', function(e) {
+        $(window).on('touchstart', function(e) {    
             var model = '<?php echo $model; ?>';
+            console.log('touchstart')
 
             if(model == 'right')
             {
@@ -249,18 +253,21 @@ if($model == 'right')
 
 
 
-                $(window).on('mousemove', function(e) {
-                // $(window).on('touchmove', function(e) {
+                // $(window).on('vmousemove', function(e) {
+                $(window).on('touchmove', function(e) {
                     e.preventDefault()
                     /* stop moving when mouse button is released:*/
-                    h_iframe = window.outerHeight - e.screenY;
-                    console.log('mouse move: '+ (window.outerHeight - e.screenY));
-                    console.log(document.onmousedown);
+                    lastPosY = e.originalEvent.touches[0].screenY;
+                    console.log('touchmove: '+lastPosY)
+                    h_iframe = window.outerHeight - e.originalEvent.touches[0].screenY;
+                    // console.log('mouse move: '+ (window.outerHeight - e.screenY));
+                    // console.log(document.onmousedown);
                     // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
                     
-                    
+                    console.log('touchmove: outer hieght is ' + window.outerHeight)
+
                     height = Math.max(100, h_iframe+50);
-                    console.log('set hieght is ' + height)
+                    console.log('touchmove: set hieght is ' + height)
                     $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: height}, 0);
                 
                 // if (h_iframe < 500 && document.onmousedown !== null)

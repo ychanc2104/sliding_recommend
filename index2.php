@@ -75,7 +75,7 @@ if(isset($_GET["model"]) == true)
         <script src="avividai_recommend_config_right.js?<?php echo date('Ymdhis'); ?>"></script>
     <?php endif; ?>
 
-    <script src="avividai_recommend.js?<?php echo date('Ymdhis'); ?>"></script>
+    <script src="avividai_recommend2.js?<?php echo date('Ymdhis'); ?>"></script>
     <script src="anime.min.js?<?php echo date('Ymdhis'); ?>"></script>
 
 
@@ -89,7 +89,7 @@ if(isset($_GET["model"]) == true)
 <!-- <img id="drag1" src="img_logo.gif" draggable="true" ondragstart="drag(event)" width="336" height="69"> -->
 <?php echo $html; ?>
 
-<iframe src="avividai_recommend.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0"></iframe>
+<iframe src="avividai_recommend2.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0"></iframe>
 
 </body>
 </html>
