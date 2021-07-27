@@ -58,7 +58,7 @@ if(isset($_GET["model"]) == true)
 
     function hello(){
         e = window.event;
-        console.log(e.clientY)
+        console.log(e.screenY)
     }
 
 

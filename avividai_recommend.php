@@ -113,49 +113,76 @@ if($model == 'right')
 
     <script type="text/javascript">
 
-    platform = get_device_type(); // pc, ios or android
+    
 
     $(function() {
+
+
+        console.log(navigator.userAgent.toLowerCase());
         default_init();
+        const platform = get_device_type(); // pc, ios or android
+        console.log('this os is '+platform);
+
 
         var open_status = false;
-        var lastPosY = null; // store position Y of clicked cursor
-        var PosY_click = 0;
-        var PosY_release = 0;
+        var half_open = true;
+
+        var PosY_click = null;
+        var PosX_click = null;
+
+        var PosY_move_release = null;
+        var PosX_move_release = null;
 
         const window_Y = window.outerHeight;
-        
+        const window_X = window.outerWidth;
+
+        const open_height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
+        const open_width = window.innerWidth;;
+
         var model = '<?php echo $model; ?>';
-        var open_height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
-        console.log('fully height is '+ height);
 
-        if(model == 'bottom_product')
-        {
-            var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
-
-            $('._init_').show();
-            $('.block_overlay').hide(); //半透明遮罩
-            $(".body_row_one").css({'margin-top': 80});
-            $('body').css({height: '100%', overflow: 'auto'}); //開啟卷軸滑動
-        }
+        var Pos_click = null;
+        var Pos_move_release = null;
+        const window_size = (model=='right'? window_X : window_Y);
+        const open_size = (model=='right'? open_width : open_height);
 
 
-        $(window).on('mouseup touchend', function(e) {
-        // $(window).on('touchend', function(e) {    
+        console.log('fully height is '+ open_size);
+
+        // if(model == 'bottom_product')
+        // {
+        //     var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
+
+        //     $('._init_').show();
+        //     $('.block_overlay').hide(); //半透明遮罩
+        //     $(".body_row_one").css({'margin-top': 80});
+        //     $('body').css({height: '100%', overflow: 'auto'}); //開啟卷軸滑動
+        // }
+
+
+        // mouseup (touchend) event
+        // $(window).on('mouseup touchend', function(e) {
+        $(window).on('touchend', function(e) {    
             /* stop moving when mouse button is released:*/
+            // const criteria = window_Y/3;
+            const criteria = window_size/3;
 
-
-
-            const criteria = window.outerHeight/3;
             console.log('when mouse height is greater than ' + criteria + ' fully open')
             // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
 
-
             if (open_status == false) // now is close, to open
             {
-                if (window.outerHeight - lastPosY < criteria) // restore
+                if (window_size - Pos_move_release < criteria) // restore
+
+                // if (window_Y - PosY_move_release < criteria) // restore
                 {
-                    $('#avividai_recommend_iframe', parent.document).css({height:'50px'}); // get 
+                    if (model == 'right') {
+                        $('#avividai_recommend_iframe', parent.document).css({'margin-left': open_width-50}); // get 
+                    }
+                    else {
+                        $('#avividai_recommend_iframe', parent.document).css({height:'50px'}); // get 
+                    }
+                    // $('#avividai_recommend_iframe', parent.document).css({height:'50px'}); // get 
                     $('#avividai_recommend_iframe', parent.document).attr("data-status", "start");
                     $('#avividai_recommend_iframe', parent.document).css({display:'block'});
                     window.parent.document.body.style.overflow = "auto"; // enable scroll of parent window
@@ -168,39 +195,46 @@ if($model == 'right')
                 else // open
                 {
                     console.log('open fully window')
-                    $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 600);
+                    if (model == 'right') {
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({'margin-left': 0}, 600);
+                    }
+                    else {
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 600);
+                    }
                     $('._init_').show();
                     $('.block_overlay').hide(); //半透明遮罩
                     $(".body_row_one").css({'margin-top': 80});
                     $('body').css({height: '100%', overflow: 'auto'}); //開啟卷軸滑動
                     window.parent.document.body.style.overflow="hidden"; // disable scroll of parent window
                     open_status = true;
-                    lastPosY = 0; // reset Y to prevent restore when click upper region
+                    PosY_move_release = 0; // reset Y to prevent restore when click upper region
                     // default_init();
                     // reback();
                 }
-                // $('#avividai_recommend_iframe', parent.document).css({height:'50px'});
-                // $('#avividai_recommend_iframe', parent.document).attr("data-status", "start");
-                // $('#avividai_recommend_iframe', parent.document).css({display:'block'});
-                // default_init();
-                // reback();
+
             }
             else if (open_status == true) // now is open, to close
             {
-                if (window.outerHeight - PosY_click>0.8*window.outerHeight && window.outerHeight - PosY_release < 0.6*window.outerHeight) // to close
+                if (window_size - Pos_click>0.8*window_size && window_size - Pos_move_release < 0.6*window_size) // to close
+                // if (window_Y - PosY_click>0.8*window_Y && window_Y - PosY_move_release < 0.6*window_Y) // to close
                 {
-                    // lastPosY = e.originalEvent.targetTouches[0].screenY; // mobile
-                    // lastPosY = e.screenY; // pc
+
                     // h_iframe = window.outerHeight - lastPosY;
                     // height = Math.min(window.outerHeight, h_iframe+50);
-                    console.log('now is open, start to close x,xxxx ' + window.outerHeight - PosY_release+' < '+0.6*window.outerHeight);
+                    console.log('now is open, start to close x,xxxx ' + window_Y - PosY_move_release+' < '+0.6*window_Y);
                    
                     $('#avividai_recommend_iframe', parent.document).slideUp(300);
 
                     setTimeout(function() {
 
                         $('#avividai_recommend_iframe', parent.document).css({display:'block'});
-                        $('#avividai_recommend_iframe', parent.document).css({height:'50px'});
+                        if (model == 'right') {
+
+                            $('#avividai_recommend_iframe', parent.document).css({'margin-left': open_width-50});
+                        }
+                        else {
+                            $('#avividai_recommend_iframe', parent.document).css({height:'50px'});
+                        }
                         $('#avividai_recommend_iframe', parent.document).attr("data-status", "start");
                         
                         window.parent.document.body.style.overflow = "auto"; // enable scroll of parent window
@@ -214,15 +248,23 @@ if($model == 'right')
                 else // restore to fully open
                 {
                     console.log('now is open, restore to open');
+                    if (model == 'right') {
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({'margin-left': 0}, 0);
 
-                    $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 0);
+                    }
+                    else {
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 0);
+                    }
+
+                    // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 0);
                     window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
                     open_status = true;
-                    lastPosY = 0;
+                    PosY_move_release = 0;
 
                 }
 
             }
+            // release move event
             $(window).unbind('mousemove');
             $(window).unbind('touchmove');
 
@@ -230,130 +272,118 @@ if($model == 'right')
 
 
         
-        //開啟集合頁
-        $(window).on('mousedown touchstart', function(e) {
-            PosY_click = get_PosY(e, platform)
+        // mousedown, touchstart event and mousemove event
+        // $(window).on('mousedown touchstart', function(e) {
+        $(window).on('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // PosY_click = get_Pos(e, platform, 'y');
+            // PosX_click = get_Pos(e, platform, 'x');
+            $(window).unbind('scroll'); // cancel scroll event triggered
+
+            Pos_click = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y'));
+
             console.log('open status: '+ open_status);
             console.log('platform is '+platform);
-        // $(window).on('touchstart', function(e) {    
+            console.log('mouse clickY '+Pos_click);
+
             var model = '<?php echo $model; ?>';
 
             if(model == 'right')
             {
-                var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
+                if (open_status==true && half_open==true) // click to fully open
+                    { // already half open
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 600);
+                        half_open = false;
+                    }
+                // $(window).on('mousemove touchmove', function(e) {
+                $(window).on('touchmove', function(e) {
 
-                $('#avividai_recommend_iframe', parent.document).css("height", height);
-                $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop");
-                $('#avividai_recommend_iframe', parent.document).animate({'margin-left': 0}, 600);
+                    // const window_X = window.outerWidth;
+                    window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
+                    // PosY_move_release = get_Pos(e, platform, 'x'); // update PosY_move_release only when mouse is moving
+                    Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
+
+                    console.log('mouse move ' + PosY_move_release);
+
+                    if (open_status == false) // now is close, to open, adjust height along with mousemove
+                    {
+                        /* stop moving when mouse button is released:*/
+                        // h_iframe = window_Y - PosY_move_release;
+                        h_iframe = window_size - Pos_move_release;
+
+                        // console.log('mouse move: '+ (window.outerHeight - lastPosY));
+                        // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
+                        cursor_height = Math.max(50, h_iframe+100);
+                        // console.log('set cursor_height is ' + cursor_height + 'windwo_Y is '+ window_Y + ' and cursor is '+ PosY_move_release);
+
+                        console.log('set cursor_X is ' + cursor_height + 'windwo_X is '+ window_size + ' and cursor is '+ Pos_move_release);
+                        // if (model == 'right') {
+
+                        // }
+                        // else {
+                            
+                        // }
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({'margin-left': Pos_move_release}, 0);
+                    }
+                    // else if (open_status==true && half_open==true)
+                    // { // already half open
+                    //     e.preventDefault();
+                    //     e.stopPropagation();
+                    //     $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: open_height}, 0);
+                    //     half_open = false;
+                    // }
+                });
+
+            //     var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
+
+            //     $('#avividai_recommend_iframe', parent.document).css("height", height);
+            //     $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop");
+            //     $('#avividai_recommend_iframe', parent.document).animate({'margin-left': 0}, 600);
                 
-                $('.block_overlay').hide(); //半透明遮罩
-                $('body').css({height: '100%', overflow: 'auto'}); //開啟卷軸滑動
+            //     $('.block_overlay').hide(); //半透明遮罩
+            //     $('body').css({height: '100%', overflow: 'auto'}); //開啟卷軸滑動
 
-                //箭頭關閉，所以內容都需左移
-                setTimeout(function() {
+            //     //箭頭關閉，所以內容都需左移
+            //     setTimeout(function() {
 
-                    $('#right_arrow_btn').hide();
-                    $('#row_header').show();
-                    $('#item_div ._init_:eq(0)').css({'left':'-3px', 'background-color':'#ffffff'});
-                    $('.block_overlay').css('margin-left', 0);
-                    $('body').css('background', '#ffffff');
-                }, 100);
+            //         $('#right_arrow_btn').hide();
+            //         $('#row_header').show();
+            //         $('#item_div ._init_:eq(0)').css({'left':'-3px', 'background-color':'#ffffff'});
+            //         $('.block_overlay').css('margin-left', 0);
+            //         $('body').css('background', '#ffffff');
+            //     }, 100);
             }
 
             if(model == 'bottom')
             {
-                var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
-                console.log('bottom NO1, height is ' + height);
-                console.log('bottom NO1, last posY is ' + lastPosY);
 
-
+                // var height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
+                // console.log('bottom NO1, height is ' + height);
                 $(window).on('mousemove touchmove', function(e) {
+                    // const window_Y = window.outerHeight;
                     window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
-                    // $(window.parent).unbind('scroll');
-                // $(window).on('touchmove', function(e) {
-                    // e.preventDefault()
-                    if (platform == 'pc')
-                        {
-                            lastPosY = e.screenY; // pc
-                        }
-                    else // android or ios
-                        {
-                            lastPosY = e.originalEvent.targetTouches[0].screenY; // mobile
-                        }
-                    PosY_release = get_PosY(e, platform);
+                    PosY_move_release = get_Pos(e, platform, 'y'); // update PosY_move_release only when mouse is moving
 
-                    if (open_status == false) // now is close, to open
+                    // console.log('mouse move ' + PosY_move_release);
+
+                    if (open_status == false) // now is close, to open, adjust height along with mousemove
                     {
                         /* stop moving when mouse button is released:*/
-
-                        // lastPosY = e.originalEvent.targetTouches[0].screenY; // mobile
-                        // if (platform == 'pc')
-                        // {
-                        //     lastPosY = e.screenY; // pc
-                        // }
-                        // else // android or ios
-                        // {
-                        //     lastPosY = e.originalEvent.targetTouches[0].screenY; // mobile
-                        // }
-                        // lastPosY = e.screenY; // pc
-                        h_iframe = window.outerHeight - lastPosY;
+                        h_iframe = window_Y - PosY_move_release;
                         // console.log('mouse move: '+ (window.outerHeight - lastPosY));
                         // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
-                        cursor_height = Math.max(50, h_iframe+40);
-                        // console.log('set hieght is ' + height)
+                        cursor_height = Math.max(50, h_iframe+100);
+                        // console.log('set cursor_height is ' + cursor_height + 'windwo_Y is '+ window_Y + ' and cursor is '+ PosY_move_release);
                         $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: cursor_height}, 0);
-                        // console.log('drag to open, hieght is ' + height)
-
                     }
-                    // else // now is open, to close
-                    // {
-                    //     // lastPosY = e.originalEvent.targetTouches[0].screenY; // mobile
-                    //     // lastPosY = e.screenY; // pc
-                    //     if (window.outerHeight - PosY_click>0.8*window.outerHeight)
-                    //     {
-
-                        
-                    //         window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
-                    //         $(window).unbind('touchmove');
-                    //         h_iframe = window.outerHeight - lastPosY;
-                    //         cursor_height = Math.min(window.outerHeight, h_iframe+50);
-
-                    //         console.log('now is open, to close, set hieght is ' + cursor_height)
-                    //         console.log('drag to open, outer.hieght is ' + window.outerHeight+'PosY_click: '+PosY_click)
-                    //         $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: cursor_height}, 0); // pc
-                    //     }
-
-
-                    //     // if (platform == 'pc' && window.outerHeight-PosY_click>0.8*window.outerHeight)
-                    //     // {
-                    //     //     console.log('change height: mousemove... '+PosY_click+' > '+window.outerHeight)
-                    //     //     $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: cursor_height}, 0); // pc
-                    //     // }
-                    //     // else // android or ios
-                    //     // {
-                    //     //      // mobile
-                    //     // }
-                    //     // if (height > 0.7*window_Y)
-                    //     // {
-                    //     // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: height}, 0);
-                    //         // lastPosY = 0;
-                    //     // }
-                    //     // else
-                    //     // {
-                    //     //     lastPosY = 0;
-                    //     // }
-                        
-                    // }
-                    // e.stopPropagation();
-
-
-
                 });
-
 
             }
 
-            return false;
         });
 
 
@@ -365,7 +395,7 @@ if($model == 'right')
             {
                 var width = parseInt($('#avividai_recommend_iframe', parent.document).attr("data-width"))+10;
 
-                $('#avividai_recommend_iframe', parent.document).animate({'height': avivid_recommend_setting['right_item_height']}, 600);
+                $('#avividai_recommend_iframe', parent.document).animate({'height': Math.round(open_height*2/3)}, 600);
 
                 setTimeout(function() {
                     $('#avividai_recommend_iframe', parent.document).animate({marginLeft: width}, 800);
@@ -374,10 +404,13 @@ if($model == 'right')
                 setTimeout(function() {
                     $('#avividai_recommend_iframe', parent.document).attr("data-status", "start");
                     $('#avividai_recommend_iframe', parent.document).css({display:'block'});
+                    $('#avividai_recommend_iframe', parent.document).css({height: Math.round(open_height*2/3)});
 
                     default_init();
                     reback();
                 }, 700);
+                open_status = false;
+                half_open = true;
             }
 
             if(model == 'bottom')
@@ -393,6 +426,8 @@ if($model == 'right')
                     reback();
 
                 }, 300);
+                open_status = false;
+
             }
 
             if(model == 'bottom_product')
@@ -452,23 +487,23 @@ if($model == 'right')
         });
 
 
-        //超連結內容
+        // 超連結內容, to open item url
         $(document).on('click', '.href_btn', function() {
 
             var model = '<?php echo $model; ?>';
             var width = window.innerWidth;
             var url   = $(this).attr('data-url');
             var title = $(this).text().substring(0, 15);
-
+            // create iframe linked to clicked item page
             $('#body_iframe').html('<iframe src="'+url+'" scrolling="no" style="border:0; width:100%; height:5000px; z-index:1; overflow-x:hidden"></iframe>');
-
+            // hiden all items div
             $('#item_div').animate({height:"0"}, 700);
 
             setTimeout(function() {
-                $('#item_div').hide();
-                $('#body_iframe').show();
+                $('#item_div').hide(); // hidden all items page including header bar
+                $('#body_iframe').show(); // show iframe of clicked item
                 $('#reback_btn').css("color", "#ffffff").show();
-                $('#window_title').text(title);
+                $('#window_title').text(title); // add item title to the top
                 $('#body_iframe').css({"margin-topavividai_recommend_iframe":"50px"});
                 $('#recommend_iframe').attr("data-status", "start");
                 $('#mydiv').css({"margin": "30px 0 0 0"}); // align product page
@@ -478,36 +513,36 @@ if($model == 'right')
                 {
                     $('#recommend_iframe').css({'margin-left': width+16});
 
-                    var timer = null;
+                    // var timer = null;
 
-                    //滾動動作, useless??
-                    document.addEventListener('scroll', function() {
-                        //利用狀態停止列表滾動時，出現滑不完選單
-                        if($('#recommend_iframe').attr("data-status") == "end")
-                        {
-                            return false;
-                        }
+                    // //滾動動作, useless??
+                    // document.addEventListener('scroll', function() {
+                    //     //利用狀態停止列表滾動時，出現滑不完選單
+                    //     if($('#recommend_iframe').attr("data-status") == "end")
+                    //     {
+                    //         return false;
+                    //     }
 
-                        $('#recommend_iframe').show();
-                        $('#recommend_iframe').animate({'margin-left': width-16}, 600);
+                    //     $('#recommend_iframe').show();
+                    //     $('#recommend_iframe').animate({'margin-left': width-16}, 600);
 
-                        if(timer !== null) 
-                        {
-                            clearTimeout(timer);        
-                        }
+                    //     if(timer !== null) 
+                    //     {
+                    //         clearTimeout(timer);        
+                    //     }
 
-                        //停止scroll事件
-                        timer = setTimeout(function() 
-                        {
-                            //收回
-                            $('#recommend_iframe').hide();
-                        }, avivid_recommend_setting['second']);
+                    //     //停止scroll事件
+                    //     timer = setTimeout(function() 
+                    //     {
+                    //         //收回
+                    //         $('#recommend_iframe').hide();
+                    //     }, avivid_recommend_setting['second']);
                         
-                    }, false);
+                    // }, false);
 
-                    $('#recommend_iframe').show(); //開啟內容頁的推薦集合頁
+                    // $('#recommend_iframe').show(); //開啟內容頁的推薦集合頁
 
-                    return false;
+                    // return false;
                 }
 
                 //底部推薦集合頁設定
@@ -590,62 +625,54 @@ if($model == 'right')
         var timer = null;
 
         window.parent.addEventListener('scroll', function(event) {
-            console.log('trigger scroll ,open_status: '+open_status);
-            if (open_status == false)
+            // console.log('trigger scroll ,open_status: '+open_status);
+            if (open_status == false) // now is close, show small div when scrolling
             {
-                // event.preventDefault();
-                // console.log("trigger scroll " + $('#recommend_iframe').attr("style"));
-                // $('#recommend_iframe').css({height:'50px', display:'block'})
-                // element.style.height = "50px"; //設定初始高度
-                // element.style.display = "block";
-                // if($('#recommend_iframe').attr("data-status") == "stop")
-                // {
-                //     return false;
-                // }
+                // console.log('height 50px......');
+                if (model == 'right') {
+                    $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '50px'});
+                    $('#avividai_recommend_iframe', parent.document).css({height: open_height*2/3});
 
-                // anime({
-                //     targets: $('#recommend_iframe').attr("style"),
-                //     height: 50,
-                //     duration: 400
-                // });
-                console.log('height 50px......');
-                $('#avividai_recommend_iframe', parent.document).css({display:'block', height:'50px'});
-                $('#avividai_recommend_iframe', parent.document).animate({height: 50}, 0);
+                    $('#avividai_recommend_iframe', parent.document).animate({'margin-left': window_size-50}, 0);              
+                }
+                else {
+                    $('#avividai_recommend_iframe', parent.document).css({display:'block', height:'50px'});
+                    $('#avividai_recommend_iframe', parent.document).animate({height: 50}, 0);
+                }
+
+                // $('#avividai_recommend_iframe', parent.document).css({display:'block', height:'50px'});
+                // $('#avividai_recommend_iframe', parent.document).animate({height: 50}, 0);
                 // $('#recommend_iframe').animate({height: '50px'});
 
-                if(timer !== null) 
+                if(timer !== null) // reset timeout if contimuously scrolling
                 {
                     clearTimeout(timer);        
                 }
 
-                //停止scroll事件
+                // wait avivid_recommend_setting['second'], and hidden small div
                 timer = setTimeout(function() 
                 {
-                    // if($('#recommend_iframe').attr("data-status") == "stop")
-                    // {
-                    //     return false;
-                    // }
-
-                    // 收回
-                    // anime({
-                    //     targets: $('#recommend_iframe').attr("style"),
-                    //     height: 0,
-                    //     duration: 5000
-                    // });
-                    if (open_status == false)
+                    if (open_status == false) // if open, then cancel to hidden div
                     {
-                        $('#avividai_recommend_iframe', parent.document).animate({height: 0}, 0);
+                        if (model == 'right') {
+                            $('#avividai_recommend_iframe', parent.document).animate({'margin-left': window_size}, 500);
+                        }
+                        else {
+                            $('#avividai_recommend_iframe', parent.document).animate({height: 0}, 500);
+                        }
+                        // $('#avividai_recommend_iframe', parent.document).animate({height: 0}, 500);
                     }
                 }, avivid_recommend_setting['second']);
             }
         });
 
-
-
-
     });
 
 
+
+
+
+    //// function
     //預設項目, 
     function default_init()
     {
@@ -653,7 +680,7 @@ if($model == 'right')
 
         if(model == "right")
         {
-            get_like(100);
+            get_item('guess') //抓猜你喜歡
 
             $('._init_').show();
             $('body').css({height: '100%', overflow: 'hidden'}); //關閉卷軸滑動
@@ -671,16 +698,16 @@ if($model == 'right')
             // get_like(); //抓猜你喜歡
             get_item('guess') //抓猜你喜歡
 
-            $('._init_').hide();
+            $('._init_').hide(); // close header bar (猜你喜歡, 別人也看了)
             $('body').css({height: '100%', overflow: 'hidden'}); //關閉卷軸滑動
-            $(".body_row_one").css('margin-top', 0);
+            $(".body_row_one").css('margin-top', 0); // move image of items to the top
 
             $('#right_arrow_btn').hide(); //關閉箭頭
         }
 
         if(model == "bottom_product")
         {
-            get_like(); //抓猜你喜歡
+            get_item('guess') //抓猜你喜歡
 
             $('._init_').hide();
             $('body').css({height: '100%', overflow: 'hidden'}); //關閉卷軸滑動
@@ -693,20 +720,19 @@ if($model == 'right')
     }
 
 
-    //回上一頁
+    // back to all items page(猜你喜歡 & 別人也看了)
     function reback()
     {
-        $('#body_iframe').animate({height:"0"}, 800);
-        $('#recommend_iframe').hide().attr("data-status", "end");
+        $('#body_iframe').animate({height:"0"}, 800); // make items disappeared
+        $('#recommend_iframe').hide().attr("data-status", "end"); 
 
         setTimeout(function() {
-            $('#body_iframe').html('');
-            $('#body_iframe').hide(); //推薦內容頁
+            $('#body_iframe').html(''); // clear item url iframe
+            $('#body_iframe').hide(); // hidden item url iframe to show all items page
             $('#reback_btn').css("color", "#9f9f9f").show(); //回上一頁按鈕
 
             $('#item_div').show();
             $('#window_title').text('');
-
             $('#item_div').css("height", "100%");
         }, 800);
     }
@@ -746,12 +772,12 @@ if($model == 'right')
             $('#recommend_body_div').html('');
 
             var i = 0;
-            if (website_type==1 || website_type==2)
+            if (website_type==1 || website_type==2) // There are ad mixing in, shuffle ad into article 
             {
                 callback = merge_article_ad(callback);
             }
             //
-            console.log(callback);
+            // console.log(callback);
             //  
 
             $.each(callback, function(key, value) {
@@ -794,170 +820,6 @@ if($model == 'right')
 
 
 
-
-    //抓猜你喜歡
-    function get_like(top)
-    {
-        var web_id         = '<?php echo $web_id; ?>';
-        var uuid           = '<?php echo $uuid; ?>'; 
-        var title          = '<?php echo $title; ?>'; 
-        var url            = '<?php echo $url; ?>'; 
-        var meta_url       = '<?php echo $meta_url; ?>';
-        var website_type   = '<?php echo $website_type; ?>';
-        var recommend_type = '<?php echo $recommend_type; ?>';
-        const type         = 'guess';
-        
-
-        // var web_id   = 'underwear';
-        // var title    = ''
-        console.log('getlike look web_id is '+web_id)
-
-        $('#recommend_body_div').html(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(255, 255, 255); display: block; shape-rendering: auto; margin-top: 150px" width="30px" height="30px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-            <circle cx="50" cy="50" r="32" stroke-width="8" stroke="#fe718d" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
-            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0 50 50;360 50 50"></animateTransform>
-            </circle>
-        </svg>`);
-
-
-        $.getJSON(get_api_route(website_type, recommend_type, web_id, title, type), function(callback) {
-            if(callback === '_')
-            {
-                console.log(callback)
-
-                return false;
-            }
-
-            $('#recommend_body_div').html('');
-
-            var i = 0;
-            if (website_type==1 || website_type==2)
-            {
-                callback = merge_article_ad(callback);
-            }
-            //
-            console.log(callback);
-            //  
-
-            $.each(callback, function(key, value) {
-                if(key == "item_list")
-                {
-                    return false;
-                }
-
-                var html      = '';
-                var div_class = '';
-
-                if(i <= 1)
-                {
-                    div_class = 'body_row_one';
-                }
-
-                html += `
-                        <div class="col-6 `+div_class+`">
-                            <a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
-                            <h6 class="title"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['title']+`</a></h6>
-                            <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['description']+`</a></div>
-                        </div>`;
-                
-
-                $('#recommend_body_div').append(html);
-                
-                if(i >= 2 && i <= 4)
-                {
-                    $('#recommend_iframe > div').append(html);
-                }
-
-                i++;
-            });
-
-            $(".body_row_one").css('padding', '12px');
-
-            if(top > 0)
-            {
-                $(".body_row_one").css('margin-top', top);
-            }
-        });
-    }
-
-
-    //其他人也看了
-    function get_other(top)
-    {
-        var web_id         = '<?php echo $web_id; ?>';
-        var uuid           = '<?php echo $uuid; ?>'; 
-        var title          = '<?php echo $title; ?>'; 
-        var url            = '<?php echo $url; ?>'; 
-        var meta_url       = '<?php echo $meta_url; ?>';
-        var website_type   = '<?php echo $website_type; ?>';
-        var recommend_type = '<?php echo $recommend_type; ?>';
-        const type         = 'also';
-
-        console.log('others look web_id is '+web_id)
-
-        $('#recommend_body_div').html(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(255, 255, 255); display: block; shape-rendering: auto; margin-top: 150px" width="30px" height="30px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-            <circle cx="50" cy="50" r="32" stroke-width="8" stroke="#fe718d" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
-            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0 50 50;360 50 50"></animateTransform>
-            </circle>
-        </svg>`);
-
-        $.getJSON(get_api_route(website_type, recommend_type, web_id, title, type), function(callback) {
-            if(callback === '_')
-            {
-                return false;
-            }
-
-            $('#recommend_body_div').html('');
-
-            var i = 0;
-            if (website_type==1 || website_type==2)
-            {
-                callback = merge_article_ad(callback);
-            }
-
-            $.each(callback, function(key, value) {
-                if(key == "item_list")
-                {
-                    return false;
-                }
-
-                var html      = '';
-                var div_class = '';
-
-                if(i <= 1)
-                {
-                    div_class = 'body_row_one';
-                }
-
-                html += `
-                        <div class="col-6 `+div_class+`">
-                            <a href="javascript:void(0)" data-url="`+value['url'] + `" class="href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
-                            <h6 class="title"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['title']+`</a></h6>
-                            <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="href_btn">`+value['description']+`</a></div>
-                        </div>`;
-
-
-
-                $('#recommend_body_div').append(html);
-
-                if(i >= 2 && i <= 4)
-                {
-                    $('#recommend_iframe > div').append(html);
-                }
-
-                i++;
-            });
-
-        $(".body_row_one").css('padding', '12px');
-
-        if(top > 0)
-        {
-            $(".body_row_one").css('margin-top', top);
-        }
-
-        });
-
-    }
-
     // recommend_type: 1 for own article, 2 for other e-comm; website_type: 1 for media, 2 for blog, 3 for e-comm
     function get_api_route(website_type, recommend_type, web_id, title, type)
     {
@@ -997,106 +859,80 @@ if($model == 'right')
         return article;
     }
 
-    function initiation()
-    {
-        // document.querySelector('#avividai_recommend_iframe').style.display='block';
-        $('._init_').hide();
-        $('.block_overlay').show(); //半透明遮罩
-        $('#avividai_recommend_iframe', parent.document).css({height:'100px'});
-
-    }
+ 
 
 
-    function expansion()
-    {
-        $('._init_').show();
-        $('.block_overlay').hide(); //半透明遮罩
+    // function initiation()
+    // {
+    //     // document.querySelector('#avividai_recommend_iframe').style.display='block';
+    //     $('._init_').hide();
+    //     $('.block_overlay').show(); //半透明遮罩
+    //     $('#avividai_recommend_iframe', parent.document).css({height:'100px'});
+    // }
 
-    }
+    // function expansion()
+    // {
+    //     $('._init_').show();
+    //     $('.block_overlay').hide(); //半透明遮罩
+
+    // }
 
     function get_device_type()
     {
         var useragent = navigator.userAgent;
-        useragent = useragent.toLowerCase();                    if( useragent.indexOf('iphone') != -1 )
+        useragent = useragent.toLowerCase();                    
+        if( useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1)
         {
             platform = 'ios';
-        }                    else if( useragent.indexOf('android') != -1 )
+            // $("#right_arrow_btn").css({"cursor":"pointer"});
+        }
+                       
+        else if( useragent.indexOf('android') != -1 )
         {
             platform = 'android';
-        }                    else
+        }                    
+        else
         {
             platform = 'pc';
         }
         return platform
     }
 
-    function get_PosY(e, platform)
+    function get_Pos(e, platform, axis)
     {
+        window_X = window.outerWidth;
         if (platform == 'pc')
         {
+            // let e = window.parent.event;
             PosY = e.screenY; // pc
+            // PosX = (e.pageX < 0? window_X+e.pageX : e.pageX);
+            PosX = (e.screenX < 0? window_X+e.screenX : e.screenX);
+
+            console.log('posY is '+PosY);
+            console.log('posX is '+PosX);
+
         }
         else // android or ios
         {
-            PosY = e.originalEvent.targetTouches[0].screenY; // mobile
+            // PosY = e.originalEvent.targetTouches[0].screenY; // mobile
+            // // PosX = (e.originalEvent.targetTouches[0].pageX < 0? window_X+e.originalEvent.targetTouches[0].pageX : e.originalEvent.targetTouches[0].pageX); // mobile
+            // PosX = (e.originalEvent.targetTouches[0].screenX < 0? window_X+e.originalEvent.targetTouches[0].screenX : e.originalEvent.targetTouches[0].screenX); // mobile
+
+            PosY = e.touches[0].screenY; // mobile
+            // PosX = (e.originalEvent.targetTouches[0].pageX < 0? window_X+e.originalEvent.targetTouches[0].pageX : e.originalEvent.targetTouches[0].pageX); // mobile
+            PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
+
+            console.log('posY is '+PosY);
+            console.log('posX is '+PosX);
+
+            // PosY = e.originalEvent.targetTouches[0].pageY; // mobile
+
         }
-        return PosY
-
-    }
-
-
-
-        //頁底集合頁
-    function bottom_item(height)
-    {
-        // var element = document.querySelector('#avividai_recommend_iframe');
-        var element = $('#avividai_recommend_iframe', parent.document);
-        var timer   = null;
-        $('#avividai_recommend_iframe', parent.document).css({height:'50px'}); //設定初始高度
         
+        return (axis=='x'? PosX : PosY);
 
-        window.parent.addEventListener('scroll', function(event) {
-            console.log('trigger scroll '+open_status);
-            // if (open_status == false)
-            // {
-                // event.preventDefault();
-                console.log("trigger scroll");
-                element.style.height = "50px"; //設定初始高度
-                element.style.display = "block";
-                if(element.getAttribute('data-status') == "stop")
-                {
-                    return false;
-                }
-
-                anime({
-                    targets: element.style,
-                    height: 50,
-                    duration: 400
-                });
-                
-                if(timer !== null) 
-                {
-                    clearTimeout(timer);        
-                }
-
-                //停止scroll事件
-                timer = setTimeout(function() 
-                {
-                    if(element.getAttribute('data-status') == "stop")
-                    {
-                        return false;
-                    }
-
-                    // 收回
-                    anime({
-                        targets: element.style,
-                        height: 0,
-                        duration: 5000
-                    });
-                }, avivid_recommend_setting['second']);
-            // }
-        });
     }
+
 
     </script>
 </body>

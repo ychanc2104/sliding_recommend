@@ -24,7 +24,10 @@ window.onload = function() {
         //右邊集合頁
         if(avivid_recommend_setting['model'] == "right")
         {
-            right_item(avivid_height, avivid_width);
+            // right_item(avivid_height, avivid_width);
+            document.querySelector('#avividai_recommend_iframe').style.marginLeft = (avivid_width-29)+'px'; //設定最大寬度、和初始寬度
+            document.querySelector('#avividai_recommend_iframe').style.height = Math.round(avivid_height*2/3)+"px"; //設定初始高度
+            document.querySelector("#avividai_recommend_iframe").setAttribute('data-width', avivid_width); //設定最大寬度，讓內容頁可以關閉
         }
 
         //底下集合頁

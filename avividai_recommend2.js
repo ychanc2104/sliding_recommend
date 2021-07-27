@@ -3,6 +3,7 @@
 window.onload = function() {
     if(typeof avivid_recommend_setting != 'undefined')
     {
+        var platform = get_device_type(); // pc, ios or android
         var avivid_height = window.innerHeight;
         var avivid_width  = window.screen.availWidth+10;
         //var avivid_uuid   = AviviD.get_cookie_data("AviviD_uuid");
@@ -17,118 +18,24 @@ window.onload = function() {
         
         var avivid_meta_url = document.querySelector("meta[property='og:url']") !== null ? document.querySelector("meta[property='og:url']").getAttribute('content') : '_';
     
-        document.querySelector('#avividai_recommend_iframe').setAttribute('src', "avividai_recommend2.php?web_id="+avivid_recommend_setting['web_id']+"&uuid="+avivid_uuid+'&title='+avivid_title+'&url='+avivid_url+'&meta_url='+avivid_meta_url+'&model='+avivid_recommend_setting['model']+'&website_type='+avivid_recommend_setting['website_type']+'&recommend_type='+avivid_recommend_setting['recommend_type']);
+        document.querySelector('#avividai_recommend_iframe').setAttribute('src', "avividai_recommend.php?web_id="+avivid_recommend_setting['web_id']+"&uuid="+avivid_uuid+'&title='+avivid_title+'&url='+avivid_url+'&meta_url='+avivid_meta_url+'&model='+avivid_recommend_setting['model']+'&website_type='+avivid_recommend_setting['website_type']+'&recommend_type='+avivid_recommend_setting['recommend_type']);
         document.querySelector('#avividai_recommend_iframe').setAttribute('data-height', avivid_height);
 
         //右邊集合頁
         if(avivid_recommend_setting['model'] == "right")
         {
-            right_item(avivid_height, avivid_width);
+            // right_item(avivid_height, avivid_width);
+            document.querySelector('#avividai_recommend_iframe').style.marginLeft = (avivid_width-29)+'px'; //設定最大寬度、和初始寬度
+            document.querySelector('#avividai_recommend_iframe').style.height = avivid_height+"px"; //設定初始高度
+            document.querySelector("#avividai_recommend_iframe").setAttribute('data-width', avivid_width); //設定最大寬度，讓內容頁可以關閉
         }
 
         //底下集合頁
         if(avivid_recommend_setting['model'] == "bottom")
         {
+            console.log('tessssttt ' + document.querySelector('#avividai_recommend_iframe').style)
 
-            document.querySelector('#avividai_recommend_iframe').style.height = "100px"; //設定初始高度
-
-            // document.querySelector('#avividai_recommend_iframe').mousedown(function(e) {
-
-            // document.querySelector('#avividai_recommend_iframe').click(function(e) {
-
-            //         console.log("mouse height:xxxxx");
-
-            //         // e = window.event;
-            //         console.log("mouse height:" + e.clientY);
-            //         // const element = document.querySelector('#avividai_recommend_iframe');
-                    
-            //         // set_height = window.innerHeight-e.clientY;
-
-            //         // element.style.height = set_height+"px";
-
-
-            //         // onmousemove = function(e){
-            //         //     console.log("mouse height:", e.clientY);
-            //         //     const element = document.querySelector('#avividai_recommend_iframe');
-                        
-            //         //     set_height = window.innerHeight-e.clientY;
-
-            //         //     element.style.height = set_height+"px";
-
-            //         // }
-
-            // });
-
-
-
-
-
-            // $(document).ready(function(){
-                // $('#avividai_recommend_iframe').mousedown(function(e) {
-                //     // e = window.event;
-                //     console.log("mouse height:", e.clientY);
-                //     const element = document.querySelector('#avividai_recommend_iframe');
-                    
-                //     set_height = window.innerHeight-e.clientY;
-
-                //     element.style.height = set_height+"px";
-
-
-                //     // onmousemove = function(e){
-                //     //     console.log("mouse height:", e.clientY);
-                //     //     const element = document.querySelector('#avividai_recommend_iframe');
-                        
-                //     //     set_height = window.innerHeight-e.clientY;
-
-                //     //     element.style.height = set_height+"px";
-
-                //     // }
-
-                // });
-            // });
-
-
-            // document.querySelector('#avividai_recommend_iframe').onmousemove = handleMouseMove;
-
-            // function handleMouseMove(e) {
-            //     h = e.clientY;
-            //     console.log('height is ' + h);
-            //     document.querySelector('#avividai_recommend_iframe').style.height = h+"px";
-            // }
-
-
-            // dragElement(document.querySelector('#avividai_recommend_iframe'));
-            // // document.querySelector('#avividai_recommend_iframe').onmousedown = dragMouseDown;
-            // // document.onmousemove = handleMouseMove;
-
-            // function dragElement(elmnt) {
-
-            //     elmnt.onmousedown = dragMouseDown;
-                
-            //     function dragMouseDown(e) {
-            //         console.log("mouse location:", e.clientX, e.clientY)
-            //         h = e.clientY;
-            //         document.onmouseup = closeDragElement;
-            //         // call a function whenever the cursor moves:
-            //         document.onmousemove = elementDrag;
-            //     }
-
-            //     function closeDragElement() {
-            //         /* stop moving when mouse button is released:*/
-            //         document.onmouseup = null;
-            //         document.onmousemove = null;
-            //     }
-
-            //     function elementDrag(e) {
-            //         e = e || window.event;
-            //         e.preventDefault();
-            //         elmnt.style.height = e.clientY + "px";
-            //     }
-            // }
-
-            // $('#avividai_recommend_iframe').mousemove(function(e) {
-            //     console.log("mouse location:", e.clientX, e.clientY)
-            // })
+            // document.querySelector('#avividai_recommend_iframe').style.height = "100px"; //設定初始高度
 
             // bottom_item(avivid_height);
         }
@@ -196,40 +103,49 @@ window.onload = function() {
     {
         var element = document.querySelector('#avividai_recommend_iframe');
         var timer   = null;
-        document.querySelector('#avividai_recommend_iframe').style.height = "100px"; //設定初始高度
+        element.style.height = "50px"; //設定初始高度
+        
 
         window.parent.addEventListener('scroll', function(event) {
-            if(element.getAttribute('data-status') == "stop")
-            {
-                return false;
-            }
-
-            // anime({
-            //     targets: element.style,
-            //     height: 350,
-            //     duration: 600
-            // });
-            
-            if(timer !== null) 
-            {
-                clearTimeout(timer);        
-            }
-
-            //停止scroll事件
-            timer = setTimeout(function() 
-            {
+            console.log(parent.open_status);
+            // if (open_status == false)
+            // {
+                // event.preventDefault();
+                console.log("trigger scroll");
+                element.style.height = "50px"; //設定初始高度
+                element.style.display = "block";
                 if(element.getAttribute('data-status') == "stop")
                 {
                     return false;
                 }
 
-                //收回
-                // anime({
-                //     targets: element.style,
-                //     height: 0,
-                //     duration: 5000
-                // });
-            }, avivid_recommend_setting['second']);
+                anime({
+                    targets: element.style,
+                    height: 50,
+                    duration: 400
+                });
+                
+                if(timer !== null) 
+                {
+                    clearTimeout(timer);        
+                }
+
+                //停止scroll事件
+                timer = setTimeout(function() 
+                {
+                    if(element.getAttribute('data-status') == "stop")
+                    {
+                        return false;
+                    }
+
+                    // 收回
+                    anime({
+                        targets: element.style,
+                        height: 0,
+                        duration: 5000
+                    });
+                }, avivid_recommend_setting['second']);
+            // }
         });
     }
 
@@ -274,4 +190,22 @@ window.onload = function() {
             }
         });
     }
+
+
+    function get_device_type()
+    {
+        var useragent = navigator.userAgent;
+        useragent = useragent.toLowerCase();                    if( useragent.indexOf('iphone') != -1 )
+        {
+            platform = 'ios';
+        }                    else if( useragent.indexOf('android') != -1 )
+        {
+            platform = 'android';
+        }                    else
+        {
+            platform = 'pc';
+        }
+        return platform
+    }
+
 }
