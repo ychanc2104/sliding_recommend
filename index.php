@@ -30,6 +30,7 @@ if(isset($_GET["model"]) == true)
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <title>推薦版位</title>
     <link href="avividai_recommend.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
     <style>
         #div1 {
@@ -38,6 +39,8 @@ if(isset($_GET["model"]) == true)
         padding: 10px;
         border: 1px solid #aaaaaa;
         }
+
+ 
     </style>
 
     <script>
@@ -58,9 +61,30 @@ if(isset($_GET["model"]) == true)
 
     function hello(){
         e = window.event;
-        console.log(e.screenY)
+        console.log('pc: '+e.clientX);
+        // console.log('touch: '+e.touches[0].screenY);
+        // console.log('touch_jquery: '+e.originalEvent.targetTouches[0].screenY);
+
+
     }
 
+    // $(function() {
+
+    //     // $(window).on('mousedown touchstart', function(e) {
+    //     // $(window).on('touchstart mousedown click', function(e) {
+    //     $(window).on('touchstart mousedown', function(e) {
+    //         e.preventDefault();
+
+    //         // e.preventDefault();
+    //         // e.stopPropagation();
+
+    //         console.log('screenX is '+e.screenX);
+
+    //         // console.log(e.length);
+
+    //     });
+
+    // });
 
 
 
@@ -82,11 +106,10 @@ if(isset($_GET["model"]) == true)
 
 </head>
 
-<body onclick="hello()" style="height: 2000px">
+<body style="height: 2000px">
 
-<!-- <div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div> -->
 
-<!-- <img id="drag1" src="img_logo.gif" draggable="true" ondragstart="drag(event)" width="336" height="69"> -->
+
 <?php echo $html; ?>
 
 <iframe src="avividai_recommend.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0"></iframe>
