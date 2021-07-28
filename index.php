@@ -49,7 +49,7 @@ if(isset($_GET["model"]) == true)
 
     function hello(){
         e = window.event;
-        console.log('pc: '+e.clientX);
+        console.log('pc: '+e.screenX);
         // console.log('touch: '+e.touches[0].screenY);
         // console.log('touch_jquery: '+e.originalEvent.targetTouches[0].screenY);
     }
@@ -82,7 +82,7 @@ if(isset($_GET["model"]) == true)
 
 
 
-<body style="height: 2000px">
+<body onclick="hello()" style="height: 2000px">
 
 <button onclick="change_model()" type="button" style="position: sticky; top: 10vh; margin-left: 70vw; width: 10vmax; height: 10vmin; font-size: 3vmin;">Change mode</button>
 
