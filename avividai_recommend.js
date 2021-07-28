@@ -10,7 +10,7 @@ window.onload = function() {
         var avivid_uuid   = '1234';
         var avivid_url    = window.location.href;
         var avivid_title  = document.querySelector("meta[property='og:title']") !== null ? document.querySelector("meta[property='og:title']").getAttribute('content') : '_';
-    
+
         if (avivid_title == '_')
         {
             avivid_title = document.querySelector("meta[name='og:title']") !== null ? document.querySelector("meta[name='og:title']").getAttribute('content') : '_';
@@ -18,7 +18,10 @@ window.onload = function() {
         
         var avivid_meta_url = document.querySelector("meta[property='og:url']") !== null ? document.querySelector("meta[property='og:url']").getAttribute('content') : '_';
     
+
+  
         document.querySelector('#avividai_recommend_iframe').setAttribute('src', "avividai_recommend.php?web_id="+avivid_recommend_setting['web_id']+"&uuid="+avivid_uuid+'&title='+avivid_title+'&url='+avivid_url+'&meta_url='+avivid_meta_url+'&model='+avivid_recommend_setting['model']+'&website_type='+avivid_recommend_setting['website_type']+'&recommend_type='+avivid_recommend_setting['recommend_type']);
+        
         document.querySelector('#avividai_recommend_iframe').setAttribute('data-height', avivid_height);
 
         //右邊集合頁

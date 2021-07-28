@@ -84,3 +84,8 @@ body
     display:none;
     bottom: 0;
 }
+
+#recommend_body_div
+{
+    background-color: white;
+}
