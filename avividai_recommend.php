@@ -53,13 +53,13 @@ if($model == 'right')
 </head>
 
 <body class="sticky_top" style="background-color: transparent;">
-    <img src="img/left_close_arrow2.png?20210604" id="left_arrow_btn" style="width:35px; height:35px; position: absolute; top: 50%; bottom: 50%; z-index: 100; cursor: pointer;">
-    <img src="img/right_close_arrow2.png?20210604" id="right_arrow_btn" style="width:35px; height:35px; position: absolute; right: 0;top: 50%; bottom: 50%; z-index: 100; cursor: pointer;">
+    <img src="img/left_close_arrow2.png?20210604" id="left_arrow_btn" style="width:35px; height:35px; position: absolute; top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
+    <img src="img/right_close_arrow2.png?20210604" id="right_arrow_btn" style="width:35px; height:35px; position: absolute; right: 0;top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
 
     <div class="block_overlay" style="z-index: 1000; border: none; margin: 0px; padding: 0px; width: 100%; height: 100%; top: 0px; left: 0px; background-color: rgb(0, 0, 0); opacity: 0.15; cursor: wait; position: fixed;"></div>
     <!-- <div class="row _init_" id="row_header" style="background-color: rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0px; right: 0; left: 0; margin:0 0 20px 0; height:60px; z-index:10;"></div> -->
 
-    <div id="recomm_wrapper" class="container" style="max-width: 100%;">
+    <div id="recomm_wrapper" class="container" style="max-width: 100%; margin-left: -1vmax;">
         <!--浮動標題列 rgba(116,116,116,0.5)-->
         <div class="row" id="row_header" style="background-color: rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0px; right: 0; left: 0; margin:0 0 20px 0; height:6vh; z-index:10;">
             <div class="col-2">
@@ -101,7 +101,7 @@ if($model == 'right')
         <!--推薦內容集合頁-->
         <div class="row" id="item_div" style="margin:10vh auto; width:100%">
             <div class="col">
-                <div class="_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: 0; margin:0; margin-bottom: 15px; z-index:10; height: 7vh; line-height: 4vh">
+                <div id="header_wrapper" class="_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -1.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
                     <div class="row">
                         <div class="col-6 text-center menu_header_btn" style="padding: 0 12px 0 36px">
                             <b style="font-size: 20px">猜你喜歡</b>
@@ -127,6 +127,9 @@ if($model == 'right')
     $(function() {
         $(window.parent).on('mouseup touchend mousedown touchstart mousemove touchmove click tap', function(e) {}); // required for ios
         $(window).on('mouseup touchend mousedown touchstart mousemove touchmove click tap', function(e) {}); // required for ios
+        $(window.parent).on('scroll touchstart', function(e) {});
+        $('#right_arrow_btn').on('touchstart mousedown click', function(e) {});
+        
 
         console.log(navigator.userAgent.toLowerCase());
         default_init();
@@ -140,12 +143,14 @@ if($model == 'right')
         var Pos_move_release = PosX_move_release = PosY_move_release = null;
 
         // const window_Y = window.outerHeight;
+        
+        // const window_X = window.outerWidth;
+        const window_X = screen.width;
         const window_Y = screen.height;
-        const window_X = window.outerWidth;
         // const window_X = screenX;
-        const open_height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
+        
         const open_width = window.innerWidth;;
-
+        const open_height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
         var model = '<?php echo $model; ?>';
         console.log('initialize model ' +model);
 
@@ -163,6 +168,9 @@ if($model == 'right')
         var right_open_css = null;
         var timeout_right_right = null;
         var timeout_right_init = null;
+
+        var timeout_downscroll_av = timeout_upscroll_av = null;
+        var timeout_downscroll_css = timeout_upscroll_css = null;
 
         console.log('window_size is '+ window_size);
         console.log('fully height is '+ open_size);
@@ -209,33 +217,27 @@ if($model == 'right')
         // $(window).on('click', '#close_window_btn', function(e) {
             console.log('close_window_btn event trigger')
             clearTimeout(timeout_scroll);
-            window.parent.document.body.style.overflow="auto";
 
             if(model == 'right')
             {
                 console.log("right, close page");
-                // let width = parseInt($('#avividai_recommend_iframe', parent.document).attr("data-width"))+10;
                 $('#avividai_recommend_iframe', parent.document).css({top:'', bottom:0});
-
-                if (open_status != 1) // in half-open state, no need to shrink height
-                {
-                    $('#avividai_recommend_iframe', parent.document).animate({top: '40vh'}, 600);
-
-                }
-
+                $('#avividai_recommend_iframe', parent.document).animate({top: '40vh'}, 300);
                 timeout_right_right = setTimeout(function() {
-                    $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, 600);
-
-                }, 600);
+                    $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, 300);
+                }, 300);
                 timeout_right_init = setTimeout(function() {
                     // $('#avividai_recommend_iframe', parent.document).attr("data-status", "start");
                     $('#avividai_recommend_iframe', parent.document).css({display:'block'});
-
                     $('#left_arrow_btn').css({display: 'block'});
                     $('#right_arrow_btn').css({display: 'block'});
+                    css_close_showdiv(model);
                     css_close_hidediv(model);
-                    reback();                
-                }, 700);
+                    reback();   
+                    set_parent_scroll(1);
+                    // window.parent.document.body.style.overflow = "auto";
+                    // window.parent.document.body.style.position = "";             
+                }, 600);
 
             }
 
@@ -244,10 +246,13 @@ if($model == 'right')
                 // $('#avividai_recommend_iframe', parent.document).css({top:'', overflow:'scroll'}); // cancel sticky to the top
                 $('#avividai_recommend_iframe', parent.document).animate({top: '100vh'}, 600);
                 timeout_right_init = setTimeout(function() {
+                    css_close_showdiv(model);
                     css_close_hidediv(model);
                     reback();
+                    set_parent_scroll(1);
+                    // window.parent.document.body.style.overflow = "auto";
+                    // window.parent.document.body.style.position = "";
                     // $('#avividai_recommend_iframe', parent.document).css({top:'100vh'});
-
                 }, 300);
             }
             //// not yet to use
@@ -264,6 +269,7 @@ if($model == 'right')
             open_status = 0;
             Pos_move_release = 0; // reset to 0 position, to enable click to open
 
+
         });
 
 
@@ -271,30 +277,46 @@ if($model == 'right')
         // mouseup (touchend) event
         $(window).on('mouseup touchend', function(e) {
         // window.addEventListener('touchend', function(e) {
-            console.log('mouseup event trigger')
+            // console.log('mouseup event trigger')
             const criteria = window_size/3;
-            if (open_status == 0) // now is close, to open
+            if (open_status == 0) // now is close or moving, to open
             {
+                clearTimeout(timeout_downscroll_av);  
+                clearTimeout(timeout_upscroll_av);  
+                clearTimeout(timeout_downscroll_css);  
+                clearTimeout(timeout_upscroll_css);
+                clearTimeout(timeout_scroll);  // clear shinking scrolling event
+                //// clear all scroll events
+                // for (var i = 0; i < scroll_events.length; i++) {
+                //     clearTimeout(scroll_events[i]);
+                // }
+                // scroll_events = [];
                 // if (window_size - Pos_move_release < criteria || distance_move < criteria) // restore to close
                 if (window_size - Pos_move_release > criteria || distance_move > criteria) // success to open
                 {
-                    console.log('now is close, start to open, Pos_move_release '+Pos_move_release);
-                    window.parent.document.body.style.overflow="hidden"; // disable scroll of parent window, put in first
+                    console.log('now is close, start to open, Pos_move_release '+Pos_move_release+' model: '+ model);
+                    set_parent_scroll(0);
+                    // window.parent.document.body.style.overflow="hidden"; // disable scroll of parent window, put in first
+                    // window.parent.document.body.style.position = "fixed";
                     if (model == 'right') { // 1st motion, two motions to open  
-                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({left: 0}, 600);
+                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({left: 0}, 500);
                         // $('#right_arrow_btn').css({display: 'block', top: '35vh'});
                         // $('#left_arrow_btn').css({display: 'none'});
                         setTimeout(function() {
                             css_halfopen();
                             open_status = 1;
-                        }, 700);
+                        }, 500);
                     }
                     else { // bottom
-                        $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({top: 0}, 600);
+                        console.log('now is close, start to open, Pos_move_release '+Pos_move_release+' model: '+ model);
+
+                        // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({top: 0}, 500);
+                        $('#avividai_recommend_iframe', parent.document).animate({top: 0}, 500);
+
                         setTimeout(function() {
                             css_fullyopen();
                             open_status = 2; // one motion open
-                        }, 700);
+                        }, 800);
 
                     }
 
@@ -315,9 +337,11 @@ if($model == 'right')
                     setTimeout(function() { // wait for animation to close
                         css_close_showdiv(model);
                         css_close_hidediv(model);
-                    }, 400);
+                    }, 300);
                     // $('#avividai_recommend_iframe', parent.document).attr("data-status", "start");
-                    window.parent.document.body.style.overflow="auto"; // enable scroll of parent window
+                    set_parent_scroll(1);
+                    // window.parent.document.body.style.overflow = "auto"; // enable scroll of parent window
+                    // window.parent.document.body.style.position = "";
                     reback();
                     open_status = 0; // confirm to be 0
                     Pos_move_release = 0; // reset Y to prevent restore when click upper region
@@ -331,61 +355,108 @@ if($model == 'right')
         });
 
 
+        // $(window).on('mousedown touchstart', function(e) {
+        //     window.parent.document.body.style.overflow = "hidden";
+        //     console.log('tirgger click, tap: overflow: '+window.parent.document.body.style.overflow);
+        // });
+
+
         
         // mousedown, touchstart event and mousemove event
         // $(window).on('mousedown touchstart', function(e) {
         $(window).on('mousedown touchstart', function(e) {
-            console.log('mousedown event trigger');
+            // console.log('mousedown event trigger');
         // window.addEventListener('touchstart', function(e) {
             // clearTimeout(timeout_scroll); // cancel scrolling event
             // window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
             // open_status = 1; // to half open
+            //// clear scroll event to prevent shrinking
+            // open_status = 3; // moving state
+            clearTimeout(timeout_downscroll_av);  
+            clearTimeout(timeout_upscroll_av);  
+            clearTimeout(timeout_downscroll_css);  
+            clearTimeout(timeout_upscroll_css);
+            //// clear all scroll events
+            // for (var i = 0; i < scroll_events.length; i++) {
+            //     clearTimeout(scroll_events[i]);
+            // }
+            // scroll_events = [];
+
             Pos_click = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y'));
-            window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
-            $(parent.window).unbind('scroll');
-            clearTimeout(scrollevent); // put in here to disable animation from scrolling event
-            clearTimeout(timeout_scroll); // cancel scrolling event
+            set_parent_scroll(0);
+            // window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
+            // window.parent.document.body.style.position = "fixed"; // adding extra for disable scroll of parent window in IOS
+            // $(parent.window).unbind('scroll');
+            // clearAllTimeouts();
+            // clearTimeout(scrollevent); // put in here to disable animation from scrolling event
+            // clearTimeout(timeout_scroll); // cancel scrolling event
             console.log('open status: '+ open_status);
             if(model == 'right')
             {
                 if (open_status==1) // 2nd motion open, click to fully open
                     {   // already half open
-                        // open to full height
+                        console.log('mousedown event trigger, now is half open');
+
                         var right_open_motion_2nd = setTimeout(function() {
-                            $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({top:0}, 300);
-                        }, 100);
+                            $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({top:0}, 200);
+
+                            // change status until animate is finished
+                            // var right_open_css = setTimeout(function() {
+                            // open_status = 2; // to fully open
+                            // css_fullyopen();
+                            //// To close at half, use to listen right_arrow_btn to close iframe during close motion 1~2
+                            // $('#right_arrow_btn').on('mousedown touchstart', function(e) {
+                            //     // clearAllTimeouts();
+                            //     // e.preventDefault();
+                            //     // clearTimeout(right_open_motion_2nd)
+                            //     // clearTimeout(right_open_css)
+                            //     right_open_motion_2nd != null? clearTimeout(right_open_motion_2nd) : '';
+                            //     right_open_css != null? clearTimeout(right_open_css) : '';
+                            //     console.log('right_arrow_btn event trigger, open_status = '+open_status);
+                            //     if (open_status != 0) { 
+                            //         console.log('trigger right_arrow_btn close event');
+                            //         $('#avividai_recommend_iframe', parent.document).animate({'left': '100vw'}, 300); // back to original position
+                            //         setTimeout(function() {
+                            //             css_close_showdiv(model);
+                            //             css_close_hidediv(model);
+                            //             open_status = 0;
+                            //             Pos_move_release = 0;
+                            //             window.parent.document.body.style.overflow="auto";
+                            //         }, 500);
+
+                            //         // open_status = 0;
+                            //         // Pos_move_release = 0; // reset to 0 position, to enable click to open
+                            //         // window.parent.document.body.style.overflow="auto";
+                            //     }
+                            // });
+                            // }, 300);
+                        }, 500);
+
                         // change status until animate is finished
-                        var right_open_css = setTimeout(function() {
+                        var right_open_css = setTimeout(function() {                            
                             open_status = 2; // to fully open
                             css_fullyopen();
                         }, 700);
 
                         //// To close at half, use to listen right_arrow_btn to close iframe during close motion 1~2
-                        $('#right_arrow_btn').on('click', function(e) {
-                            e.preventDefault();
-                            clearTimeout(right_open_motion_2nd);
-                            clearTimeout(right_open_css);
+                        $('#right_arrow_btn').on('click touchstart', function(e) {
+                            // clearAllTimeouts();
+                            // e.preventDefault();
+                            right_open_motion_2nd != null? clearTimeout(right_open_motion_2nd) : '';
+                            right_open_css != null? clearTimeout(right_open_css) : '';
                             console.log('right_arrow_btn event trigger, open_status = '+open_status);
                             if (open_status != 0) { 
-                                console.log('trigger right_arrow_btn close event');
+                                console.log('trigger right_arrow_btn close event, open_status: '+ open_status);
                                 $('#avividai_recommend_iframe', parent.document).animate({'left': '100vw'}, 300); // back to original position
-
-                                // setTimeout(function() {
-                                //     $('#avividai_recommend_iframe', parent.document).css({bottom: 0}); // get 
-                                // }, 100);
-
                                 setTimeout(function() {
                                     css_close_showdiv(model);
                                     css_close_hidediv(model);
-                                    // $('.block_overlay').show();
-                                    // $('#avividai_recommend_iframe', parent.document).css({bottom:0, top:'40vh'});
-                                    // $('#right_arrow_btn').css({display: 'block', top: '35vh'});
-                                    // $('#left_arrow_btn').css({display: 'block', top: '35vh'});
                                     open_status = 0;
                                     Pos_move_release = 0;
-                                    window.parent.document.body.style.overflow="auto";
-                                }, 700);
-
+                                    set_parent_scroll(1);
+                                    // window.parent.document.body.style.overflow = "auto";
+                                    // window.parent.document.body.style.position = "";
+                                }, 500);
                                 // open_status = 0;
                                 // Pos_move_release = 0; // reset to 0 position, to enable click to open
                                 // window.parent.document.body.style.overflow="auto";
@@ -406,8 +477,13 @@ if($model == 'right')
                 else // use to drag iframe ,open = true, half_open = false or open = true, half_open = true (should not exist this)
                 {
                     $(window).on('mousemove touchmove', function(e) {
+                        // $(window.parent).off();
+                        // $(window.parent).unbind('scroll');
+
                         // clearTimeout(timeout_scroll); // cancel scrolling event
-                        window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
+                        set_parent_scroll(0);
+                        // window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
+                        // window.parent.document.body.style.position = "fixed";
                         // window.parent.document.body.style.overflowY = "hidden"; // disable scroll of parent window
                         Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
                         console.log('mouse move ' + PosY_move_release);
@@ -415,6 +491,7 @@ if($model == 'right')
                         if (open_status == 0) // now is close, to open, adjust height along with mousemove, useless
                         {
                             /* stop moving when mouse button is released:*/
+                            // clearAllTimeouts();
                             screenX = (screenX!=0? screenX : window_size); // ios screen will =0, so make screen=window_size
                             iframe_size = Pos_move_release*window_size/screenX; // window_size = 2400, screenX=1920, Pos=0~1920
                             console.log('windwo_X is '+ window_size + 'screenX is '+ screenX + ' and cursor is '+ Pos_move_release);
@@ -433,7 +510,9 @@ if($model == 'right')
                     distance_move = Pos_click - Pos_move_release + 0.1*window_Y;
                     distance_move = (Pos_click < 0.8*window_Y? window_Y-Pos_move_release : distance_move);
                     console.log('move distance(+up, -down): '+distance_move+' Pos_click: '+Pos_click+' Pos_move_release: '+Pos_move_release);
-                    window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
+                    set_parent_scroll(0);
+                    // window.parent.document.body.style.overflow = "hidden"; // disable scroll of parent window
+                    // window.parent.document.body.style.position = "fixed";
                     // window.parent.document.body.style.overflowY = "hidden"; // disable scroll of parent window                    
                     screenX = (screenX!=0? screenX : window_size); // ios screen will =0, so make screen=window_size
                     iframe_size = distance_move*window_size/screenX;
@@ -442,6 +521,8 @@ if($model == 'right')
                     if (open_status == 0) // now is close, to open, adjust height along with mousemove
                     {
                         /* stop moving when mouse button is released:*/
+                        // clearAllTimeouts();
+                        
                         h_iframe = window_size - Pos_move_release;
                         // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
                         cursor_height = Math.max(100, h_iframe);
@@ -505,18 +586,18 @@ if($model == 'right')
                 // hiden all items div
                 // $('#item_div').animate({height:"0"}, 700);
                 $('#item_div').animate({top:"100vh"}, 700);
-
+                $('#body_iframe').css({'background-color': 'white'});
 
                 setTimeout(function() {
                     $('#item_div').hide(); // hidden all items page including header bar
                     $('#body_iframe').show(); // show iframe of clicked item
                     $('#reback_btn').css("color", "#ffffff").show();
-                    $('#window_title').text(title); // add item title to the top
+                    // $('#window_title').text(title); // add item title to the top
                     // $('#body_iframe').css({"margin-topavividai_recommend_iframe":"50px"});
-                    $('#body_iframe').css({"margin-to":"50px"});
+                    $('#body_iframe').css({"margin-top":"3vh"});
 
                     $('#recommend_iframe').attr("data-status", "start");
-                    $('#recomm_wrapper').css({"margin": "30px 0 0 0"}); // align product page
+                    // $('#recomm_wrapper').css({"margin": "30px 0 0 0"}); // align product page
                 }, 500);
             }
         });
@@ -530,58 +611,132 @@ if($model == 'right')
 
         var lastreq = 0; //0 means there were never any requests sent
         var lastScrollTop = 0;
-        window.parent.addEventListener('scroll', function(event) {
-            event.stopPropagation();
-            var d = new Date();
-            var currenttime = d.getTime(); //get the time of this change event
-            var interval = currenttime - lastreq; //how many milliseconds since the last request
-            if(interval >= 400){ //more than 0.5 seconds
-                lastreq = currenttime; //set lastreq for next change event
+        // window.parent.addEventListener('scroll', function(event) {
+        var scrolled = false;
+        var scroll_events = [];
+        $(window.parent).on('scroll', function(event) {
+            Pos_move_release = 0; // update PosY_move_release only when mouse is moving
+            // if (!scrolled && open_status==0) 
+            if (!scrolled) 
+            {
+                scrolled = true;
+            // event.stopPropagation();
+            // var d = new Date();
+            // var currenttime = d.getTime(); //get the time of this change event
+            // var interval = currenttime - lastreq; //how many milliseconds since the last request
+            // if(interval >= 400){ //more than 0.5 seconds
+            //     lastreq = currenttime; //set lastreq for next change event
                 //perform AJAX call
                 // scrollevent = setTimeout(function() {
                 console.log('trigger scroll ,open_status: '+open_status);
-                Pos_move_release = 0; // update PosY_move_release only when mouse is moving
-                window.parent.document.body.style.overflow = "auto"; // enable scroll of parent window
+                // Pos_move_release = 0; // update PosY_move_release only when mouse is moving
+                set_parent_scroll(1);
+                // window.parent.document.body.style.overflow = "auto"; // enable scroll of parent window
+                // window.parent.document.body.style.position = "";
                 // $('#avividai_recommend_iframe', parent.document).css({bottom: 0, top: ''});
                 // open_status = 0;
                 // clearTimeout(timeout_right_right);
                 // clearTimeout(timeout_right_init);
+                // clearTimeout(timeout_downscroll_av);  
+                // clearTimeout(timeout_upscroll_av); 
                 if (open_status == 0) // only when now is close, show small div and set to default setting when scrolling
                 {
-                    clearTimeout(timeout_downscroll);  
-                    clearTimeout(timeout_scroll);  
+                    // clearAllTimeouts();
+                    // clearTimeout(timeout_downscroll_av);  
+                    // clearTimeout(timeout_upscroll_av);  
+                    // clearTimeout(timeout_downscroll_css);  
+                    // clearTimeout(timeout_upscroll_css);
+
+                    // clearTimeout(timeout_scroll);  
                     var st = parent.window.pageYOffset || parent.document.documentElement.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
                     if (st > lastScrollTop) // move to down, show div
                     {
                         console.log('downscroll: st: '+st+' lastScrollTop: '+lastScrollTop);
-                        // default_animation(1)
-                        timeout_downscroll = setTimeout(function() {
-                            default_animation(1)
-                        }, 200);
-                        // default_css_settings()
-                        setTimeout(function() {
-                            css_close_showdiv(model)
-                        }, 200);
+                        // default_animation(1, 300);
+                        // css_close_showdiv(model);
+
+                        css_close_showdiv_ran(model);
+                        // setTimeout(function() {
+                        //     css_close_showdiv(model);
+                        // }, 300);
+
+                        // scroll_events.push(setTimeout(function() { 
+                        //     default_animation(1, 300);
+                        // }, 200));
+
+                        // scroll_events.push(setTimeout(function() {
+                        //         css_close_showdiv(model);
+                        // }, 300));
+
+
+                        // default_animation(1) // open div
+                        // css_close_showdiv(model);
+                        // $('#avividai_recommend_iframe', parent.document).animate({left: '90vw'}, 200)
+                        // scroll_down_show(model);
+
+                        // timeout_downscroll_av = setTimeout(function() {
+                        //     default_animation(1, 200) // open div
+                        //     // $('#avividai_recommend_iframe', parent.document).animate({left: '90vw'}, 200)
+                        //     // css_close_showdiv(model);
+                        //     // $('#avividai_recommend_iframe', parent.document).animate({left: '90vw'}, 500)
+                        //     // setTimeout(function() {
+                        //     //     css_close_showdiv(model);
+                        //     // }, 500);
+                        // }, 400);
+                        // // default_css_settings()
+                        // timeout_downscroll_css = setTimeout(function() {
+                        //     css_close_showdiv(model);
+                        // }, 600);
                         // downscroll code
-                    } else // move to top, hidden div
+                    } 
+
+                    // else if ($(window,window.parent.document).scrollTop() + $(window,window.parent.document).height() >= 0.9*$(document ,window.parent.document).height())
+                    // {
+                    //     css_close_showdiv_ran(model);
+                    // }
+                    else // move upward, hidden div
                     {
                         console.log('upscroll: st: '+st+' lastScrollTop: '+lastScrollTop);
-                        default_animation(0) // to close
-                        setTimeout(function() {
-                            css_close_hidediv(model)
-                        }, 200);       
+                        // scroll_up_hide(model);
+
+                        // default_animation(0, 300);
+                        css_close_hidediv(model);
+                        // setTimeout(function() {
+                        //     css_close_hidediv(model);
+                        // }, 300);
+
+                        // scroll_events.push(setTimeout(function() { 
+                        //     default_animation(0, 300);
+                        // }, 200));
+
+                        // scroll_events.push(setTimeout(function() {
+                        //     css_close_hidediv(model);
+                        // }, 300));
+
+                        // default_animation(0, 300)
+                        // setTimeout(function() {
+                        //         css_close_hidediv(model);
+                        // }, 300);
+
+                        // timeout_upscroll_av = setTimeout(function() {
+                        //     default_animation(0, 200) // to close
+                        //     // $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, 500)
+                        //     // setTimeout(function() {
+                        //     //     css_close_hidediv(model);
+                        //     // }, 500);
+                        // }, 400);  
+                        // timeout_upscroll_css = setTimeout(function() {
+                        //     css_close_hidediv(model);
+                        // }, 600);
                         // upscroll code
                     }
                     lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-                    
                     // default_css_settings()
-
-
                     // if(timeout_scroll !== null) // reset timeout if contimuously scrolling
                     // {
                     //     clearTimeout(timeout_scroll);        
                     // }
-
+                    clearTimeout(timeout_scroll); 
                     // wait avivid_recommend_setting['second'], and hidden small div
                     timeout_scroll = setTimeout(function() {
                         if (open_status == 0) // if open, then cancel to hidden div
@@ -589,7 +744,6 @@ if($model == 'right')
                             if (model == 'right') {
                                 // $('#avividai_recommend_iframe', parent.document).animate({'margin-left': window_size}, 500);
                                 $('#avividai_recommend_iframe', parent.document).animate({'left': '100vw'}, 500);
-
                             }
                             else {
                                 // $('#avividai_recommend_iframe', parent.document).animate({height: 0}, 500);
@@ -598,13 +752,31 @@ if($model == 'right')
                             // $('#avividai_recommend_iframe', parent.document).animate({height: 0}, 500);
                         }
                     }, avivid_recommend_setting['second']);
+
+                    // if ($(window,window.parent.document).scrollTop() + $(window,window.parent.document).height() >= 0.9*$(document ,window.parent.document).height())
+                    // {
+                    //     console.log('scrollTop: '+$(window,window.parent.document).scrollTop()+' height: '+$(window,window.parent.document).height()+' document height: '+$(document ,window.parent.document).height());
+                    //     clearTimeout(timeout_scroll); 
+                    //     css_close_showdiv_ran(model);
+                    // }
+
                 }
             // e.stopPropagation();
             // }, 1000); 
+                setTimeout(function () { scrolled = false; }, 80); // 400
+      
+            }
+
+
+            if (st + parent.window.innerHeight >= 0.85*parent.document.body.scrollHeight)
+            {
+                console.log('scrollTop: '+st+' window height: '+ parent.window.innerHeight+' document height: '+parent.document.body.scrollHeight);
+                clearTimeout(timeout_scroll); 
+                css_close_showdiv_ran(model);
             }
         });
-
     });
+
 
 
     //// detect scrolling direction
@@ -627,26 +799,79 @@ if($model == 'right')
     //// function
 
 
-    function slide_to_open(e) 
+    function clearAllTimeouts(scroll_events)
     {
+        for (var i = 0; i < scroll_events.length; i++) {
+            clearTimeout(scroll_events[i]);
+        }
+        //quick reset of the timer array you just cleared
+        scroll_events = [];
+    }
 
+    //// scroll up to hide 
+    async function scroll_up_hide(model) {
+        const close_av = await default_animation(0) // to close
+        css_close_hidediv(model, close_av);
+    }
+    
+
+    //// scroll up to show 
+    async function scroll_down_show(model) {
+        const show_av = await default_animation(1) // to show
+        css_close_showdiv(model, show_av);
     }
 
 
-    function default_animation(motion) // motion: 0 for close, 1 for open
+
+    function default_animation(motion, timeout) // motion: 0 for close, 1 for open
     {
         var model = '<?php echo $model; ?>';
         if(model == "right")
         {
-            motion==0? $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, 200): $('#avividai_recommend_iframe', parent.document).animate({left: '90vw'}, 200);
+            motion==0? $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, timeout): $('#avividai_recommend_iframe', parent.document).animate({left: '90vw'}, timeout);
         }
         else
         {
-            motion==0? $('#avividai_recommend_iframe', parent.document).animate({top: '100vh'}, 200): $('#avividai_recommend_iframe', parent.document).animate({top: '94vh'}, 200);
+            motion==0? $('#avividai_recommend_iframe', parent.document).animate({top: '100vh'}, timeout): $('#avividai_recommend_iframe', parent.document).animate({top: '94vh'}, timeout);
         }
     }
 
+    //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
+    function css_close_showdiv_ran(model)
+    {
+        if (model == 'right')
+        {
+            $('.block_overlay').show();
+            $('#row_header').hide();
+            $('._init_').hide(); // show header title bar
+            $('#item_div').css({'margin-top': '10vh'});
+            iframe_size = 4+Math.random();
+            $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '', left: 'calc(100% - '+iframe_size+'%)', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
+            $('#right_arrow_btn').css({display: 'block', top: '25vh'});
+            $('#left_arrow_btn').css({display: 'block', top: '25vh'});
+            $('#recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+            $('.block_overlay').css({"margin-left": "-1vmax"}); // align product page
+        }
+        else
+        {
+            $('.block_overlay').show();
+            $('#row_header').hide();
+            $('._init_').hide(); // show header title bar
+            $('#item_div').css({'margin-top': '2vh'});
+            // $('#avividai_recommend_iframe', parent.document).css({display:'block', top:(91+Math.random()*2)+'vh', bottom: 0, height: '100vh', width: '100vw', left: 0});
+            // iframe_height = 46+5*Math.random();
+            iframe_size = 7+Math.random();
 
+            $('#avividai_recommend_iframe', parent.document).css({display:'block', top: 'calc(100% - '+iframe_size+'%)' , bottom: 0, height: '100vh', width: '100vw', left: 0});
+
+            $('#right_arrow_btn').css({display: 'none'});
+            $('#left_arrow_btn').css({display: 'none'});
+            $('#recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+            // $('.block_overlay').css({"margin-left": "-1vmax"}); // align product page
+        }
+        set_parent_scroll(1);
+
+    }
 
 
     //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
@@ -659,10 +884,10 @@ if($model == 'right')
             $('._init_').hide(); // show header title bar
             $('#item_div').css({'margin-top': '10vh'});
             $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '', left: '90vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
-            $('#right_arrow_btn').css({display: 'block', top: '35vh'});
+            $('#right_arrow_btn').css({display: 'block', top: '25vh'});
             $('#left_arrow_btn').css({display: 'block', top: '25vh'});
-            $('#recomm_wrapper').css({"margin-left": "1vmax"}); // align product page
-            $('.block_overlay').css({"margin-left": "1vmax"}); // align product page
+            $('#recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+            $('.block_overlay').css({"margin-left": "-1vmax"}); // align product page
         }
         else
         {
@@ -673,11 +898,13 @@ if($model == 'right')
             $('#avividai_recommend_iframe', parent.document).css({display:'block', top:'94vh', bottom: 0, height: '100vh', width: '100vw', left: 0});
             $('#right_arrow_btn').css({display: 'none'});
             $('#left_arrow_btn').css({display: 'none'});
+            $('#recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+            // $('.block_overlay').css({"margin-left": "-1vmax"}); // align product page
         }
-        window.parent.document.body.style.overflow="auto"; // open scrolling
+        set_parent_scroll(1);
     }
     //// hidden samll div to toggle, open_status=0, scroll up (two version, right and bottom)
-    function css_close_hidediv(model)
+    function css_close_hidediv(model, await_const)
     {
         if (model == 'right')
         {
@@ -687,7 +914,7 @@ if($model == 'right')
         {
             $('#avividai_recommend_iframe', parent.document).css({display:'block', top:'100vh', bottom: 0, height: '100vh', width: '100vw', left: 0});
         }
-        window.parent.document.body.style.overflow = "auto"; // open scrolling
+        set_parent_scroll(1);
 
     }
 
@@ -698,9 +925,9 @@ if($model == 'right')
         $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '', left: '0', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
         $('#row_header').hide(); // hide gray transparent bar
         $('._init_').show(); // show header title bar
-        $('#right_arrow_btn').css({display: 'block', top: '35vh'});
-        $('#left_arrow_btn').css({display: 'none', top: '35vh'});
-        window.parent.document.body.style.overflow = "hidden"; // close parent page scrolling
+        $('#right_arrow_btn').css({display: 'block', top: '37vh'});
+        $('#left_arrow_btn').css({display: 'none', top: '37vh'});
+        set_parent_scroll(0);
         $('#recommend_body_div').css({'overflow-y': 'hidden'}) // close iframe scrolling
 
     }
@@ -715,8 +942,8 @@ if($model == 'right')
         $('#item_div').css({'margin-top': '10vh'}); // items images
         $('#right_arrow_btn').css({display: 'none'});
         $('#left_arrow_btn').css({display: 'none'});
-        window.parent.document.body.style.overflow = "hidden"; // close scrolling
-
+        $('#recommend_body_div').css({'overflow-y': 'auto'}) // close iframe scrolling
+        set_parent_scroll(0);
     }
 
     //預設項目, 
@@ -747,12 +974,9 @@ if($model == 'right')
         {
             // get_like(); //抓猜你喜歡
             get_item('guess') //抓猜你喜歡
-
             $('#reback_btn').hide(); // hide reback_arrow
             $('._init_').hide(); // close header bar (猜你喜歡, 別人也看了)
             $('body').css({height: '100%', overflow: 'hidden'}); //關閉卷軸滑動
-            // $('body').css({height: '100%', overflowY: 'hidden'}); //關閉卷軸滑動
-
             $(".body_row_one").css('margin-top', 0); // move image of items to the top
             $('#right_arrow_btn').hide(); //關閉箭頭
         }
@@ -778,20 +1002,34 @@ if($model == 'right')
     {
         
         // $('#body_iframe').animate({height:"0"}, 800); // make items disappeared
-        $('#body_iframe').animate({top: '100vh'}, 800); // make items disappeared
+        // css_fullyopen();
+        $('#body_iframe').css({'background-color': 'white'});
+        $('#body_iframe').css({top: '100vh'});
+        // $('#body_iframe').animate({top: '100vh'}, 800); // make items disappeared
 
         $('#recommend_iframe').hide().attr("data-status", "end"); 
 
-        setTimeout(function() {
-            $('#reback_btn').hide(); // hide reback_arrow
-            $('#body_iframe').html(''); // clear item url iframe
-            $('#body_iframe').hide(); // hidden item url iframe to show all items page
 
-            // $('#reback_btn').css("color", "#9f9f9f").show(); //回上一頁按鈕
-            $('#item_div').show();
-            $('#window_title').text('');
-            $('#item_div').css("height", "100%");
-        }, 800);
+        $('#reback_btn').hide(); // hide reback_arrow
+        $('#body_iframe').html(''); // clear item url iframe
+        $('#body_iframe').hide(); // hidden item url iframe to show all items page
+
+        // $('#reback_btn').css("color", "#9f9f9f").show(); //回上一頁按鈕
+        $('#item_div').show();
+        $('#window_title').text('');
+        $('#item_div').css("height", "100vh");
+        css_fullyopen();
+        // setTimeout(function() {
+        //     $('#reback_btn').hide(); // hide reback_arrow
+        //     $('#body_iframe').html(''); // clear item url iframe
+        //     $('#body_iframe').hide(); // hidden item url iframe to show all items page
+
+        //     // $('#reback_btn').css("color", "#9f9f9f").show(); //回上一頁按鈕
+        //     $('#item_div').show();
+        //     $('#window_title').text('');
+        //     $('#item_div').css("height", "100vh");
+        //     css_fullyopen();
+        // }, 800);
 
     }
 
@@ -914,6 +1152,21 @@ if($model == 'right')
         return article;
     }
 
+    function set_parent_scroll(state) // 0: close scrolling, 1: open scrolling
+    {
+        if (state == 0) 
+        {
+            window.parent.document.body.style.overflow = "hidden"; // close scrolling
+            window.parent.document.body.style.position = "fixed"; // extra required for ios
+        }
+        else if (state == 1) 
+        {
+            window.parent.document.body.style.overflow = "auto"; // open scrolling
+            window.parent.document.body.style.position = ""; // extra required for ios
+        }
+        
+    }
+
  
 
 
@@ -937,11 +1190,11 @@ if($model == 'right')
         var useragent = navigator.userAgent;
         useragent = useragent.toLowerCase();   
                          
-        if( useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1)
+        if (useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1)
         {
             platform = 'ios';
         }             
-        else if( useragent.indexOf('android') != -1 )
+        else if (useragent.indexOf('android') != -1 )
         {
             platform = 'android';
         }                    
@@ -957,27 +1210,14 @@ if($model == 'right')
         window_X = screenX;
         if (platform == 'pc')
         {
-            // let e = window.parent.event;
             PosY = e.screenY; // pc
-            // PosX = (e.pageX < 0? window_X+e.pageX : e.pageX);
             PosX = (e.screenX < 0? window_X+e.screenX : e.screenX);
             PosX = (e.screenX > window_X? e.screenX-window_X : PosX);
-
-            // PosX = (e.clientX < 0? window_X+e.clientX : e.clientX);
-
-            // console.log('posY is '+PosY);
-            // console.log('posX is '+PosX+' raw screenX: '+e.screenX+' raw pageX: '+e.pageX+' raw clientX: '+e.clientX);
             console.log('posX is '+PosY+' raw screenX: '+e.screenY+' raw pageX: '+e.pageY+' raw clientX: '+e.clientY);
 
         }
         else if (platform == 'ios')
         {
-            // PosY = e.touches[0].screenY-400; // ios
-            // PosY = e.touches[0].screenY; // ios
-            // // PosY = (typeof(e.originalEvent.targetTouches[0].screenY) != "undefined" ? e.originalEvent.targetTouches[0].screenY : 0);
-            // // PosX = (e.originalEvent.targetTouches[0].pageX < 0? window_X+e.originalEvent.targetTouches[0].pageX : e.originalEvent.targetTouches[0].pageX); // mobile
-            // PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
-
 
             PosY = (typeof(e.touches)!="undefined"?e.touches[0].screenY : 0); // mobile
             if (typeof(e.touches)!="undefined")
@@ -990,20 +1230,11 @@ if($model == 'right')
                 PosX = 0
             }
 
-            // console.log('posX is '+PosX);
-            // console.log('posY is '+PosY+' raw pos: '+ e.touches[0].screenY+ ' jquery pos: '+ e.originalEvent.targetTouches[0].screenY);
-
         }
         else // android 
         {
-            // PosY = e.originalEvent.targetTouches[0].screenY; // mobile
-            // // PosX = (e.originalEvent.targetTouches[0].pageX < 0? window_X+e.originalEvent.targetTouches[0].pageX : e.originalEvent.targetTouches[0].pageX); // mobile
-            // PosX = (e.originalEvent.targetTouches[0].screenX < 0? window_X+e.originalEvent.targetTouches[0].screenX : e.originalEvent.targetTouches[0].screenX); // mobile
 
-            // PosY = e.touches[0].screenY; // mobile
             PosY = (typeof(e.touches)!="undefined"?e.touches[0].screenY : 0); // mobile
-
-            // PosX = (e.originalEvent.targetTouches[0].pageX < 0? window_X+e.originalEvent.targetTouches[0].pageX : e.originalEvent.targetTouches[0].pageX); // mobile
             if (typeof(e.touches)!="undefined")
             {
                 PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
@@ -1012,14 +1243,7 @@ if($model == 'right')
             {
                 PosX = 0
             }
-            // PosX = (typeof(e.touches)!="undefined"?e.touches[0].screenX : -1); // mobile
 
-            // PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
-
-            // console.log('posY is '+PosY);
-            // console.log('posX is '+PosX);
-
-            // PosY = e.originalEvent.targetTouches[0].pageY; // mobile
 
         }
         

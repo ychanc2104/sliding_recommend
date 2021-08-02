@@ -135,7 +135,7 @@ if(isset($_GET["model"]) == true)
 
 <?php echo $html; ?>
 
-    <iframe src="avividai_recommend.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0" style="z-index: 999; background-color: transparent;"></iframe>
+    <iframe src="avividai_recommend.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0" style="z-index: 999; background-color: transparent; position: fixed;"></iframe>
 
 </body>
 </html>
