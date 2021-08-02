@@ -89,7 +89,7 @@ if(isset($_GET["model"]) == true)
 
 
 
-<body onclick="hello()" style="height: 2000px" style="overflow-x: hidden;">
+<body style="height: 2000px" style="">
 
 <button onclick="change_model()" type="button" style="position: sticky; top: 10vh; margin-left: 70vw; width: 10vmax; height: 10vmin; font-size: 3vmin;">Change mode</button>
 
