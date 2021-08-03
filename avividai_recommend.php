@@ -168,10 +168,8 @@ if($model == 'right')
         var timeout_right_right = null;
         var timeout_right_init = null;
 
-
         console.log('window_size is '+ window_size);
         console.log('fully height is '+ open_size);
-
 
         //關閉集合頁
         $('#close_window_btn').on('click', function(e) {
@@ -247,7 +245,7 @@ if($model == 'right')
             var top_position = get_scrollbar_position(); // get scrolling position
 
             console.log('mouseup: '+ top_position);
-            if (open_status == 0) // now is close or moving, to open
+            if (open_status == 0 || open_status == 1) // now is close or moving, to open
             {
                 clearTimeout(timeout_scroll);  // clear shinking scrolling event
                 // if (window_size - Pos_move_release < criteria || distance_move < criteria) // restore to close
@@ -274,7 +272,7 @@ if($model == 'right')
                             css_fullyopen();
                             open_status = 2; // one motion open
                             console.log('bottom to open, open_status: '+open_status)
-                        }, 500);
+                        }, 1000);
 
                     }
                     Pos_move_release = 0; // reset Y to prevent restore when click upper region
@@ -369,8 +367,8 @@ if($model == 'right')
                                     css_close_hidediv(model);
                                     open_status = 0;
                                     Pos_move_release = 0;
-                                    set_parent_scroll(1);
-                                }, 500);
+                                    set_parent_scroll(1, top_position);
+                                }, 600);
                                 // open_status = 0;
                                 // Pos_move_release = 0; // reset to 0 position, to enable click to open
                                 // window.parent.document.body.style.overflow="auto";
@@ -423,6 +421,7 @@ if($model == 'right')
                     console.log('bottom, mousemove, top_position :'+top_position);
                     set_parent_scroll(0, top_position);
                     Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
+                    Pos_click = Pos_click>open_height? open_height : Pos_click;
                     distance_move = Pos_click - Pos_move_release + 0.1*window_Y;
                     distance_move = (Pos_click < 0.8*window_Y? window_Y-Pos_move_release : distance_move);
                     console.log('move distance(+up, -down): '+distance_move+' Pos_click: '+Pos_click+' Pos_move_release: '+Pos_move_release);
@@ -431,10 +430,11 @@ if($model == 'right')
                     iframe_size = distance_move*window_size/screenX;
 
 
-                    if (open_status == 0) // now is close, to open, adjust height along with mousemove
+                    if (open_status == 0 || open_status == 1) // now is close, to open, adjust height along with mousemove
                     {
                         /* stop moving when mouse button is released:*/
                         // clearAllTimeouts();
+                        open_status = 1; // half open
                         
                         h_iframe = window_size - Pos_move_release;
                         // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({height: 100}, 0);
@@ -450,6 +450,8 @@ if($model == 'right')
                     }
                 });
             }
+
+
         });
 
 
@@ -491,6 +493,7 @@ if($model == 'right')
                 var width = window.innerWidth;
                 var url   = $(this).attr('data-url');
                 var title = $(this).text().substring(0, 15);
+                open_status = 3;
                 // create iframe linked to clicked item page
                 $('#body_iframe').html('<iframe src="'+url+'" style="border:0; width:100%; height:5000px; z-index:1;"></iframe>');
                 // hiden all items div
@@ -507,6 +510,7 @@ if($model == 'right')
                     $('#body_iframe').css({"margin-top":"3vh"});
 
                     $('#recommend_iframe').attr("data-status", "start");
+                    
                     // $('#recomm_wrapper').css({"margin": "30px 0 0 0"}); // align product page
                 }, 500);
             }
@@ -516,7 +520,9 @@ if($model == 'right')
         //回上一頁
         $('#reback_btn').on("click", function(e) {
             // e.preventDefault();
+            
             reback();
+            open_status = 2;
         });
 
         var lastreq = lastScrollTop = 0; //0 means there were never any requests sent
@@ -573,13 +579,43 @@ if($model == 'right')
             }
 
             // at the bottom, always show div 
-            if (st + parent.window.innerHeight >= 0.85*parent.document.body.scrollHeight)
+            if (st + parent.window.innerHeight >= 0.85*parent.document.body.scrollHeight && open_status==0)
             {
                 console.log('scrollTop: '+st+' window height: '+ parent.window.innerHeight+' document height: '+parent.document.body.scrollHeight);
                 clearTimeout(timeout_scroll);
                 css_close_showdiv_ran(model);
             }
         });
+        var back_num = history.length;
+        
+        history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+        $(window).on('popstate', function(e) {
+            console.log('back-button detected, open_status: '+open_status+', history length: '+history.length+', parent history length: '+parent.window.history.length);
+            if (open_status == 1 || open_status == 2) // in main iframe page
+            {
+                e.preventDefault();
+                console.log('lock back button, half-open or fully-open');
+                history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+            }
+            else if (open_status == 3) // in item-page, go to last page
+            {
+                e.preventDefault();
+                console.log('lock back button, in item-page');
+                reback();
+                open_status = 2;
+                history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+            }
+            else
+            {
+                console.log('do nothing, back :');
+                history.go(-2); // go back twice
+                // do nothing
+            }
+
+        });
+
+
+
     });
 
 
@@ -641,7 +677,7 @@ if($model == 'right')
             $('#row_header').hide();
             $('._init_').hide(); // show header title bar
             $('#item_div').css({'margin-top': '10vh'});
-            iframe_size = 4+Math.random();
+            iframe_size = 6.5+Math.random();
             $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '', left: 'calc(100% - '+iframe_size+'%)', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
             $('#right_arrow_btn').css({display: 'block', top: '25vh'});
             $('#left_arrow_btn').css({display: 'block', top: '25vh'});
@@ -656,8 +692,8 @@ if($model == 'right')
             $('#item_div').css({'margin-top': '2vh'});
             // $('#avividai_recommend_iframe', parent.document).css({display:'block', top:(91+Math.random()*2)+'vh', bottom: 0, height: '100vh', width: '100vw', left: 0});
             // iframe_height = 46+5*Math.random();
-            iframe_size = 7+Math.random();
-            $('#avividai_recommend_iframe', parent.document).css({display:'block', top: 'calc(100% - '+iframe_size+'%)' , bottom: 0, height: '100vh', width: '100vw', left: 0});
+            iframe_size = 9.5+Math.random();
+            $('#avividai_recommend_iframe', parent.document).css({display:'block', top: 'calc(100% - '+iframe_size+'%)' , bottom: 0, height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
             $('#right_arrow_btn').css({display: 'none'});
             $('#left_arrow_btn').css({display: 'none'});
             $('#recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
@@ -690,7 +726,7 @@ if($model == 'right')
             $('#row_header').hide();
             $('._init_').hide(); // show header title bar
             $('#item_div').css({'margin-top': '2vh'});
-            $('#avividai_recommend_iframe', parent.document).css({display:'block', top:'94vh', bottom: 0, height: '100vh', width: '100vw', left: 0});
+            $('#avividai_recommend_iframe', parent.document).css({display:'block', top:'94vh', bottom: 0, height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
             $('#right_arrow_btn').css({display: 'none'});
             $('#left_arrow_btn').css({display: 'none'});
             $('#recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
@@ -828,10 +864,7 @@ if($model == 'right')
         $('#body_iframe').css({'background-color': 'white'});
         $('#body_iframe').css({top: '100vh'});
         // $('#body_iframe').animate({top: '100vh'}, 800); // make items disappeared
-
         $('#recommend_iframe').hide().attr("data-status", "end"); 
-
-
         $('#reback_btn').hide(); // hide reback_arrow
         $('#body_iframe').html(''); // clear item url iframe
         $('#body_iframe').hide(); // hidden item url iframe to show all items page
@@ -840,6 +873,7 @@ if($model == 'right')
         $('#item_div').show();
         $('#window_title').text('');
         $('#item_div').css("height", "100vh");
+        
         css_fullyopen();
         // setTimeout(function() {
         //     $('#reback_btn').hide(); // hide reback_arrow

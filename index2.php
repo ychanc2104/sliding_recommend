@@ -22,6 +22,8 @@ if(isset($_GET["model"]) == true)
     $model = filter_var($_GET["model"], FILTER_SANITIZE_STRING);
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -30,6 +32,7 @@ if(isset($_GET["model"]) == true)
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <title>推薦版位</title>
     <link href="avividai_recommend.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
     <style>
         #div1 {
@@ -38,31 +41,25 @@ if(isset($_GET["model"]) == true)
         padding: 10px;
         border: 1px solid #aaaaaa;
         }
+
+ 
     </style>
 
     <script>
-    // function allowDrop(ev) {
-    // ev.preventDefault();
-    // }
-
-    // function drag(ev) {
-    // ev.dataTransfer.setData("text", ev.target.id);
-    // }
-
-    // function drop(ev) {
-    // ev.preventDefault();
-    // var data = ev.dataTransfer.getData("text");
-    // ev.target.appendChild(document.getElementById(data));
-    // }
-
 
     function hello(){
         e = window.event;
-        console.log(e.clientY)
+        console.log('pc: '+e.screenX);
+        // console.log('touchY: '+e.touches[0].screenY);
+        // console.log('touch_jquery: '+e.originalEvent.targetTouches[0].screenY);
     }
 
-
-
+    function change_model() {
+        let urlParams = new URLSearchParams(window.location.search);
+        current_model = urlParams.get('test');
+        redirect_url = (current_model == 1? 'https://www.likr.com.tw/rick/recommend2/index.php?test=2' : 'https://www.likr.com.tw/rick/recommend2/index.php?test=1');
+        location.replace(redirect_url);
+    }
 
     </script>
 
@@ -75,21 +72,70 @@ if(isset($_GET["model"]) == true)
         <script src="avividai_recommend_config_right.js?<?php echo date('Ymdhis'); ?>"></script>
     <?php endif; ?>
 
-    <script src="avividai_recommend2.js?<?php echo date('Ymdhis'); ?>"></script>
+    <script src="avividai_recommend.js?<?php echo date('Ymdhis'); ?>"></script>
     <script src="anime.min.js?<?php echo date('Ymdhis'); ?>"></script>
 
+<style>
 
+    img, p, table{
+        /* width: 100vw; */
+        /* height: 100vh; */
+    }
+
+</style>
 
 </head>
 
-<body onclick="hello()" style="height: 2000px">
 
-<!-- <div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div> -->
 
-<!-- <img id="drag1" src="img_logo.gif" draggable="true" ondragstart="drag(event)" width="336" height="69"> -->
+
+<body style="height: 2000px" style="">
+
+<button onclick="change_model()" type="button" style="position: sticky; top: 10vh; margin-left: 70vw; width: 10vmax; height: 10vmin; font-size: 3vmin;">Change mode</button>
+
+<!-- Content Start -->
+<p>&nbsp;</p>
+
+<p><img src="https://photo.lovingfamily.com.tw/photo/images/%E5%B7%A6%E5%81%B4%E9%96%80%E5%B8%82%E8%B3%87%E8%A8%8A_190321.jpg" style="width:198px" /></p>
+
+<p>&nbsp;</p>
+
+<p><img src="https://photo.lovingfamily.com.tw/photo/images/181205_%E5%AE%98%E7%B6%B2%E5%B7%A6%E5%81%B4_LINE@_QR.jpg" style="height:348px; width:200px" /></p>
+
+<p>&nbsp;</p>
+
+<p><a href="https://www.facebook.com/Lovingfamily.tw/" target="_blank"><img src="https://photo.lovingfamily.com.tw/photo/images/200320_%E5%AE%98%E7%B6%B2%E5%B7%A6%E5%81%B4_facebook.jpg" style="height:198px; width:198px" /></a></p>
+
+<p>&nbsp;</p>
+
+<p><a href="https://www.lovingfamily.com.tw/TC/pdlist.aspx?PP1=001&PP2=0923" target="_blank"><img src="https://photo.lovingfamily.com.tw/photo/images/200320_%E5%AE%98%E7%B6%B2%E5%B7%A6%E5%81%B4_%E6%96%B0%E5%93%81.jpg" style="height:344px; width:198px" /></a></p>
+
+<p>&nbsp;</p>
+
+<p><a href="http://www.lovingfamily.com.tw/tc/pdlist.aspx?pp1=01" target="new"><img src="https://photo.lovingfamily.com.tw/photo/images/190624_%E5%AE%98%E7%B6%B2%E5%B7%A6%E5%81%B4_%E6%88%80%E5%AE%B6%E5%A5%BD%E7%89%A9.jpg" style="height:196px; width:196px" /></a></p>
+
+<p>&nbsp;</p>
+
+<p><a href="http://www.lovingfamily.com.tw/tc/pdlist.aspx?pp1=07" target="_blank"><img src="https://photo.lovingfamily.com.tw/photo/images/左側-01-161219_990.jpg" style="height:198px; width:198px" /></a></p>
+
+<p>&nbsp;</p>
+<!-- <img class="lazyload"src="images/kv.jpg" />     --><br />
+<!-- Content End --> 
+
+</div>
+
+
+
+
+
+
+
+
+
+
 <?php echo $html; ?>
 
-<iframe src="avividai_recommend2.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0"></iframe>
+    <iframe src="avividai_recommend2.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0" style="z-index: 999; background-color: transparent; position: fixed;"></iframe>
 
 </body>
 </html>
