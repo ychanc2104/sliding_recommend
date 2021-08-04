@@ -115,7 +115,7 @@ if($model == 'right')
                     </div>
                 </div>
 
-                <div id="recommend_body_div" class="row" style="overflow-y:scroll; margin-top:0vh; height:80vh;"></div>
+                <div id="recommend_body_div" class="row" style="overflow-y:scroll; margin-top:0vh; height:82vh;"></div>
             </div>
         </div>
     </div>
@@ -561,7 +561,7 @@ if($model == 'right')
                 var title = $(this).text().substring(0, 15);
                 open_status = 3;
                 // create iframe linked to clicked item page
-                $('#body_iframe').html('<iframe src="'+url+'" style="border:0; width:100%; height:5000px; z-index:1;"></iframe>');
+                $('#body_iframe').html('<iframe src="'+url+'" style="border:0; width:100%; height:95vh; z-index:1;"></iframe>');
                 // hiden all items div
                 // $('#item_div').animate({height:"0"}, 700);
                 $('#item_div').animate({top:"100vh"}, 700);
