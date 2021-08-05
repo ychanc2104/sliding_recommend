@@ -72,7 +72,7 @@ if(isset($_GET["model"]) == true)
         <script src="avividai_recommend_config_right.js?<?php echo date('Ymdhis'); ?>"></script>
     <?php endif; ?>
 
-    <script src="avividai_recommend.js?<?php echo date('Ymdhis'); ?>"></script>
+    <script src="avividai_recommend2.js?<?php echo date('Ymdhis'); ?>"></script>
     <script src="anime.min.js?<?php echo date('Ymdhis'); ?>"></script>
 
 <style>

@@ -74,7 +74,6 @@ if(isset($_GET["model"]) == true)
 
     <script src="avividai_recommend.js?<?php echo date('Ymdhis'); ?>"></script>
     <script src="anime.min.js?<?php echo date('Ymdhis'); ?>"></script>
-
 <style>
 
     img, p, table{
