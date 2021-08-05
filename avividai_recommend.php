@@ -136,33 +136,24 @@ if($model == 'right')
             all_timeout_scroll = []
         }
 
-        $(window.parent).on('mouseup touchend mousedown touchstart mousemove touchmove click tap', function(e) {}); // required for ios
-        $(window).on('mouseup touchend mousedown touchstart mousemove touchmove click tap', function(e) {}); // required for ios
-        $(window.parent).on('scroll touchstart', function(e) {});
-        $('#right_arrow_btn').on('touchstart mousedown click', function(e) {});
+        // $(window.parent).on('mouseup touchend mousedown touchstart mousemove touchmove click tap', function(e) {}); // required for ios
+        // $(window).on('mouseup touchend mousedown touchstart mousemove touchmove click tap', function(e) {}); // required for ios
+        // $(window.parent).on('scroll touchstart', function(e) {});
+        // $('#right_arrow_btn').on('touchstart mousedown click', function(e) {});
         
-
         console.log(navigator.userAgent.toLowerCase());
-        default_init();
-        css_close_showdiv();
-        css_close_hidediv();
 
         const platform = get_device_type(); // pc, ios or android
-        console.log('this os is '+platform);
         var model = '<?php echo $model; ?>';
-        var open_status = 0; // 0: fully close, 1: half-open, 2: fully open, 3: in item-page
-
+        var open_status = 0; // 0: fully close, 1: half-open, 2: fully open, 3: in item-page, 4: in the bottom
         var PosX_click = PosY_click = null;
-
         var Pos_move_release = PosX_move_release = PosY_move_release = null;
 
         // const window_Y = window.outerHeight;
         // const window_X = window.outerWidth;
         const window_X = screen.width;
         const window_Y = screen.height;
-        // const window_X = screenX;
         const open_width = window.innerWidth;;
-        // const open_height = $('#avividai_recommend_iframe', parent.document).attr("data-height");
         const open_height = parent.window.innerHeight;
         var model = '<?php echo $model; ?>';
 
@@ -175,26 +166,86 @@ if($model == 'right')
         // timeout events
         var timeout_scroll = null; // timeout for scrolling event
         var all_timeout_scroll = [];
-        var right_open_motion_2nd = null;
-        var right_open_css = null;
-        var timeout_right_right = null;
-        var timeout_right_init = null;
+
         // var promise = $('#avividai_recommend_iframe', parent.document).promise();
         var promise = $('#avividai_recommend_iframe', parent.document).promise();
+        
+        // wait for php read parameters
+        setTimeout( () => {
+            default_init();
+            css_close_showdiv();
+            css_close_hidediv();
+        }, 1000);
 
-        console.log('window_size is '+ window_size);
-        console.log('fully height is '+ open_size);
-
-        //關閉集合頁
-        $('#close_window_btn').on('click', function(e) {
-        // $(window).on('click', '#close_window_btn', function(e) {
-            // var top_position = window.parent.pageYOffset; // save scrolling position
-            var top_position = get_scrollbar_position(); // get scrolling position
-            open_status = animation_promise('close', false);
-            console.log('close_window_btn event trigger, top_position: '+top_position+' open_status: '+open_status);
-
+        // mousedown, touchstart event and mousemove event
+        // $(window).on('mousedown touchstart', function(e) {
+            $(window).on('mousedown touchstart', function(e) {
+            clear_all_scroll_timeout(); // make sure iframe is not shrinking due to scrolling event
+            var top_position = get_scrollbar_position();
+            // set_parent_scroll(0, top_position) // ios bug here
             Pos_move_release = 0;
-            reback();
+            Pos_click = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y'));
+            console.log('mousedown ,open status: '+ open_status);
+            if(model == 'right')
+            {
+                if (open_status==1) // 2nd motion open, click to fully open
+                {   // already half open
+                    animation_promise('open', true); // 2nd motion open, click to fully open
+                    setTimeout(function() {
+                        open_status = 2;
+                    }, 1000);
+
+                    //// To close at half, use to listen right_arrow_btn to close iframe during close motion 1~2
+                    $('#right_arrow_btn').on('click touchstart', function(e) {
+                        console.log('right_arrow_btn event trigger, open_status = '+open_status);
+                        if (open_status == 1) { 
+                            open_status = animation_promise('close', true);
+                            Pos_move_release = 0;
+                            console.log('trigger right_arrow_btn close event, open_status: '+ open_status);
+                        }
+                    });
+
+                }
+                else // use to drag iframe ,open = true, half_open = false or open = true, half_open = true (should not exist this)
+                {
+                    $(window).on('mousemove touchmove', function(e) {
+                        set_parent_scroll(0, top_position);
+                        Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
+                        // console.log('mouse move ' + PosY_move_release);
+                        if (open_status == 0) // now is close, to open, adjust height along with mousemove, useless
+                        {
+                            /* stop moving when mouse button is released:*/
+                            screenX = (screenX!=0? screenX : window_size); // ios screen will =0, so make screen=window_size
+                            iframe_size = Pos_move_release*window_size/screenX; // window_size = 2400, screenX=1920, Pos=0~1920
+                            // console.log('windwo_X is '+ window_size + 'screenX is '+ screenX + ' and cursor is '+ Pos_move_release);
+                            $('#avividai_recommend_iframe', parent.document).css({left: iframe_size-50});
+                        }
+                    });
+                }
+            }
+            if(model == 'bottom')
+            {
+                $(window).on('mousemove touchmove', function(e) {
+                    Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
+                    Pos_click = Pos_click>open_height? open_height : Pos_click;
+                    distance_move = Pos_click - Pos_move_release + 0.1*window_Y;
+                    distance_move = (Pos_click < 0.8*window_Y? window_Y-Pos_move_release : distance_move);
+                    console.log('move distance(+up, -down): '+distance_move+' Pos_click: '+Pos_click+' Pos_move_release: '+Pos_move_release+' open_status: '+open_status);
+                    screenX = (screenX!=0? screenX : window_size); // ios screen will =0, so make screen=window_size
+                    // if (open_status == 0 || open_status == 1) // now is close, to open, adjust height along with mousemove
+                    if (open_status == 0 && platform != 'ios') // now is close, to open, adjust height along with mousemove
+                    {
+
+                        set_parent_scroll(0, top_position); // lock parent window scrolling bar to prevent bug
+                        /* stop moving when mouse button is released:*/
+                        // h_iframe = window_size - Pos_move_release;
+                        // cursor_height = Math.max(100, h_iframe);
+                        console.log('set open_size is ' + open_size - distance_move + 'open_size is '+ open_size + ' and distance_move is '+ distance_move);
+                        // $('#avividai_recommend_iframe', parent.document).css({top: parent.window.innerHeight - Math.max(distance_move, 100)});
+                        $('#avividai_recommend_iframe', parent.document).css({bottom: -parent.window.innerHeight + Math.max(distance_move, 50)});
+                    }
+                });
+            }
         });
 
 
@@ -208,8 +259,9 @@ if($model == 'right')
 
             console.log('mouseup: '+ top_position+' open_status: '+ open_status);
             // if (open_status == 0 || open_status == 1) // now is close or moving, to open
-            if (open_status == 0) // now is close or moving, to open
+            if (open_status == 0 || open_status == 4) // now is close or in the bottom, to open
             {
+                clear_all_scroll_timeout();
                 // if (window_size - Pos_move_release > criteria || distance_move > criteria) // success to fully open, (1st motion for right) 
                 if (iframe_top < criteria || Pos_move_release < 10) // success to fully open, (1st motion for right) 
                 {
@@ -232,33 +284,21 @@ if($model == 'right')
                     // {
                     //     open_status = 2; // don't wait
                     // }
-
                     
                 }
-                // else // open
                 else // restore to close
                 {
-                    console.log('now is close, restore to close top_position: '+top_position);
-
                     open_status = animation_promise('close', false);
                     reback();
                     Pos_move_release = 0; // reset Y to prevent restore when click upper region
-                    console.log('new method, restore to close open_status: '+open_status);
-
+                    console.log('new method, restore to close open_status: '+open_status+', now is close, restore to close top_position: '+top_position);
                 }
             }
-
             // release move event
             $(window).off('mousemove');
             $(window).off('touchmove');
-
         });
 
-
-        // $(window).on('mousedown touchstart', function(e) {
-        //     window.parent.document.body.style.overflow = "hidden";
-        //     console.log('tirgger click, tap: overflow: '+window.parent.document.body.style.overflow);
-        // });
 
 
         // use for dynamically adjusting height of item page
@@ -267,86 +307,22 @@ if($model == 'right')
             {
                 let open_item_size = platform=='ios'? parent.window.innerHeight*0.86:parent.window.innerHeight*0.9;
                 let open_recomm_size = parent.window.innerHeight;
-                console.log('item scrolling, adjust open size to: '+open_size);
                 $('#avividai_item_iframe').css({height: open_item_size+'px'}); //
                 $('#avividai_recommend_iframe', parent.document).css({height: open_recomm_size*1.05+'px'}); //
+
+                // console.log('item scrolling, adjust open size to: '+open_size);
+
             }
         }, 1000);
 
-        
-        // mousedown, touchstart event and mousemove event
-        // $(window).on('mousedown touchstart', function(e) {
-        $(window).on('mousedown touchstart', function(e) {
-            // $(window.parent).unbind('scroll');
-            var top_position = get_scrollbar_position();
-            // set_parent_scroll(0, top_position) // ios bug here
+
+        //關閉集合頁
+        $('#close_window_btn').on('click', function(e) {
+            var top_position = get_scrollbar_position(); // get scrolling position
+            open_status = animation_promise('close', false);
+            console.log('close_window_btn event trigger, top_position: '+top_position+' open_status: '+open_status);
             Pos_move_release = 0;
-            Pos_click = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y'));
-            console.log('testttttttt: '+top_position)
-            console.log('mousedown ,open status: '+ open_status);
-            if(model == 'right')
-            {
-                if (open_status==1) // 2nd motion open, click to fully open
-                    {   // already half open
-                        animation_promise('open', true); // 2nd motion open, click to fully open
-                        setTimeout(function() {
-                            open_status = 2;
-                        }, 1000);
-
-                        //// To close at half, use to listen right_arrow_btn to close iframe during close motion 1~2
-                        $('#right_arrow_btn').on('click touchstart', function(e) {
-                            console.log('right_arrow_btn event trigger, open_status = '+open_status);
-                            if (open_status == 1) { 
-                                open_status = animation_promise('close', true);
-                                Pos_move_release = 0;
-                                console.log('trigger right_arrow_btn close event, open_status: '+ open_status);
-                            }
-                        });
-
-                    }
-                else // use to drag iframe ,open = true, half_open = false or open = true, half_open = true (should not exist this)
-                {
-                    $(window).on('mousemove touchmove', function(e) {
-                        set_parent_scroll(0, top_position);
-                        Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
-                        console.log('mouse move ' + PosY_move_release);
-                        if (open_status == 0) // now is close, to open, adjust height along with mousemove, useless
-                        {
-                            /* stop moving when mouse button is released:*/
-                            screenX = (screenX!=0? screenX : window_size); // ios screen will =0, so make screen=window_size
-                            iframe_size = Pos_move_release*window_size/screenX; // window_size = 2400, screenX=1920, Pos=0~1920
-                            console.log('windwo_X is '+ window_size + 'screenX is '+ screenX + ' and cursor is '+ Pos_move_release);
-                            $('#avividai_recommend_iframe', parent.document).css({left: iframe_size-50});
-                            // $('#avividai_recommend_iframe', parent.document).attr("data-status", "stop").animate({'left': iframe_size-50}, 0); // bigger is smaller
-                        }
-                });
-                }
-            }
-            if(model == 'bottom')
-            {
-                $(window).on('mousemove touchmove', function(e) {
-                    Pos_move_release = (model == 'right'? get_Pos(e, platform, 'x') : get_Pos(e, platform, 'y')); // update PosY_move_release only when mouse is moving
-                    Pos_click = Pos_click>open_height? open_height : Pos_click;
-                    distance_move = Pos_click - Pos_move_release + 0.1*window_Y;
-                    distance_move = (Pos_click < 0.8*window_Y? window_Y-Pos_move_release : distance_move);
-                    console.log('move distance(+up, -down): '+distance_move+' Pos_click: '+Pos_click+' Pos_move_release: '+Pos_move_release+' open_status: '+open_status);
-                    screenX = (screenX!=0? screenX : window_size); // ios screen will =0, so make screen=window_size
-                    // if (open_status == 0 || open_status == 1) // now is close, to open, adjust height along with mousemove
-                    if (open_status == 0 && platform != 'ios') // now is close, to open, adjust height along with mousemove
-                    {
-
-                        set_parent_scroll(0, top_position);
-                        /* stop moving when mouse button is released:*/
-                        h_iframe = window_size - Pos_move_release;
-                        cursor_height = Math.max(100, h_iframe);
-                        console.log('set open_size is ' + open_size - distance_move + 'open_size is '+ open_size + ' and distance_move is '+ distance_move);
-                        // $('#avividai_recommend_iframe', parent.document).css({top: parent.window.innerHeight - Math.max(distance_move, 100)});
-                        $('#avividai_recommend_iframe', parent.document).css({bottom: -parent.window.innerHeight + Math.max(distance_move, 100)});
-                    }
-                });
-            }
-
-
+            reback();
         });
 
 
@@ -382,7 +358,6 @@ if($model == 'right')
 
         // 超連結內容, to open item url
         $(document).on('click', '.href_btn', function() {
-
             if (open_status == 2)
             {
                 var width = window.innerWidth;
@@ -395,11 +370,8 @@ if($model == 'right')
                 {
                     $('#body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:80vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
 
-                }
-                else
-                {
+                } else {
                     $('#body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:93vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
-
                 }
                 // hiden all items div
                 // $('#item_div').animate({height:"0"}, 700);
@@ -407,30 +379,18 @@ if($model == 'right')
                 $('#body_iframe').css({'background-color': 'white'});
                 setTimeout(function() {
                     $('#avividai_item_iframe').css({height: open_size+'px'}); // 
-
                     $('#item_div').hide(); // hidden all items page including header bar
                     $('#body_iframe').show(); // show iframe of clicked item
                     $('#reback_btn').css("color", "#ffffff").show();
                     // $('#body_iframe').css({"margin-topavividai_recommend_iframe":"50px"});
-                    $('#body_iframe').css({"margin-top":"3vh"});
-                    $('#recommend_iframe').attr("data-status", "start");
+                    $('#body_iframe').css({"margin-top":"2.5vh"});
+                    // $('#recommend_iframe').attr("data-status", "start");
                     $('#recomm_wrapper').css({"margin-left": ""}); // restore to align page              
-
-
                     // $('#recomm_wrapper').css({"margin": "30px 0 0 0"}); // align product page
                 }, 500);
             }
         });
 
-
-
-        // // listen to scroll, adjust height
-        // $('#body_iframe').on('touchmove', function(e) {
-        //     let open_size = parent.window.innerHeight*0.9;
-
-        //     console.log('item scrolling, adjust open size to: '+open_size);
-        //     $('#avividai_item_iframe').css({height: open_size+'px'}); //
-        // });
 
         //回上一頁
         $('#reback_btn').on("click", function(e) {
@@ -445,36 +405,36 @@ if($model == 'right')
         var scrolled = false;
         $(window.parent).on('touchstart', function(e1) {
             // set_parent_scroll(0, get_scrollbar_position());            
-            y_initial = get_Pos(e1, platform, 'y'); // bigger
+            y_initial = get_Pos(e1, platform, 'y'); // get position after touch (bigger if move upward)
             y_initial = (y_initial>parent.window.innerHeight? y_initial-parent.window.innerHeight : y_initial);
             console.log(" $(window.parent).on('touchstart'), y_initial: "+y_initial);
-            scroll_y = get_scrollbar_position();
+            // scroll_y = get_scrollbar_position();
             $(window.parent).on('touchmove', function(e2) {
                 scroll_y = get_scrollbar_position(); // update scrolling position
-                
-                if (!scrolled)
-                {
-                    
+                y_final = get_Pos(e2, platform, 'y'); // (smaller) if move to the top
+                y_move = (y_initial - y_final)/y_initial*parent.window.innerHeight;
+                // y_move = (y_initial - get_Pos(e2, platform, 'y'))/y_initial*parent.window.innerHeight;
+                y_move = platform=='ios'? -y_move : y_move; //// To real-time listen, in iphone, direction is oppsite             
+                            
+                if (!scrolled) // use for control updating frequency
+                {                
                     scrolled = true;
-                    console.log('parent scroll, posScroll: '+ get_scrollbar_position()+' vs scroll_y: '+scroll_y);
+                    // console.log('parent scroll, posScroll: '+ get_scrollbar_position()+' vs scroll_y: '+scroll_y);
                     var st = parent.window.pageYOffset || parent.document.documentElement.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
                     if (st >= lastScrollTop) // move down
                     {
                         // if (scroll_y + parent.window.innerHeight >= 0.90*scroll_height && (y_initial - get_Pos(e2, platform, 'y'))>0) // at the bottom
                         if (scroll_y + parent.window.innerHeight >= 0.98*scroll_height) // at the bottom
-
                         {
                             open_status = 4;
-                            // set_parent_scroll(0, parent.document.body.scrollHeight-parent.window.innerHeight);
-                            y_final = get_Pos(e2, platform, 'y'); // smaller if move to the top
-                            y_move = (y_initial - get_Pos(e2, platform, 'y'))/y_initial*parent.window.innerHeight;
-                            y_move = platform=='ios'? -y_move : y_move; //// in iphone, direction is oppsite
-                            console.log('open_status: '+open_status+', scroll_y: '+scroll_y+', y_initial: '+y_initial+', y_final: '+y_final+', y_move: '+y_move+', parent.window.innerHeight: '+parent.window.innerHeight)
-                        
+                            y_final = get_Pos(e2, platform, 'y'); // (smaller) if move to the top
+                            // y_move = (y_initial - get_Pos(e2, platform, 'y'))/y_initial*parent.window.innerHeight;
+                            // y_move = platform=='ios'? -y_move : y_move; //// in iphone, direction is oppsite
+                            // console.log('open_status: '+open_status+', scroll_y: '+scroll_y+', y_initial: '+y_initial+', y_final: '+y_final+', y_move: '+y_move+', parent.window.innerHeight: '+parent.window.innerHeight)
                         }
                         else
                         {
-                            console.log('open_status: '+open_status+', scroll_y: '+scroll_y+', show div!!!!!!1, scroll_y: '+scroll_y+', parent.window.innerHeight: '+parent.window.innerHeight+', scroll_height: '+scroll_height+', y_initial: '+y_initial+', current_y: '+get_Pos(e2, platform, 'y'));
+                            // console.log('open_status: '+open_status+', scroll_y: '+scroll_y+', show div!!!!!!1, scroll_y: '+scroll_y+', parent.window.innerHeight: '+parent.window.innerHeight+', scroll_height: '+scroll_height+', y_initial: '+y_initial+', current_y: '+get_Pos(e2, platform, 'y'));
                             css_close_showdiv(model);
                             clear_all_scroll_timeout();
                             // wait avivid_recommend_setting['second'], and hidden small div
@@ -484,9 +444,7 @@ if($model == 'right')
                                     if (model == 'right') {
                                         $('#avividai_recommend_iframe', parent.document).animate({'left': '100vw'}, 500);
                                     }
-                                    else {
-                                        // $('#avividai_recommend_iframe', parent.document).animate({top: '100vh'}, 500);
-                                        
+                                    else {                                        
                                         $('#avividai_recommend_iframe', parent.document).animate({bottom: '-100vh'}, 500);
                                         console.log('prepare to hide div!!!!!!!!!111');
                                     }
@@ -494,23 +452,23 @@ if($model == 'right')
                             }, avivid_recommend_setting['second']);
                             all_timeout_scroll.push(timeout_scroll);
 
-                            console.log('************timeout: '+ timeout_scroll+', all: '+all_timeout_scroll);
+                            // console.log('************timeout: '+ timeout_scroll+', all: '+all_timeout_scroll);
 
                         }
                     }
-                    else if (st < lastScrollTop && st + parent.window.innerHeight < 0.98*parent.document.body.scrollHeight)// move up
+                    else if (st < lastScrollTop && (st + parent.window.innerHeight) < 0.98*parent.document.body.scrollHeight)// move up
                     {
                         open_status = 0;
                         css_close_hidediv(model);
-                        y_move = -1; // disable move bottom to open
+                        // y_move = -1; // disable move bottom to open
                     }
                     lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-                    setTimeout(function () { scrolled = false; }, 20); // wait each 20 ms
+                    setTimeout(() => { scrolled = false; }, 20); // wait each 20 ms
                 }
-                if (st + parent.window.innerHeight >= 0.85*parent.document.body.scrollHeight && open_status==0) // at the bottom
+                if (st + parent.window.innerHeight >= 0.85*parent.document.body.scrollHeight && (open_status==0 || open_status==4)) // at the bottom
                 {
                     console.log('scrollTop: '+st+' window height: '+ parent.window.innerHeight+' document height: '+parent.document.body.scrollHeight);
-                    clearTimeout(timeout_scroll); // don't hide div
+                    clear_all_scroll_timeout(); // don't hide div
                     css_close_showdiv(model);
                 }
 
@@ -525,7 +483,7 @@ if($model == 'right')
         // mouseup (touchend) event
         $(window.parent).on('mouseup touchend', function(e) {
         // window.addEventListener('touchend', function(e) {
-            const criteria = window_size/5*4;
+            let criteria = window_size/10;
             var iframe_top = $('#avividai_recommend_iframe', parent.document).css('top').split('px')[0];
             console.log(" $(window.parent).on('mouseup touchend'), open_status: "+ open_status+", iframe_top: "+iframe_top);
             // if (open_status == 0 || open_status == 1) // now is close or moving, to open
@@ -533,14 +491,12 @@ if($model == 'right')
             {
                 // if (window_size - Pos_move_release > criteria || distance_move > criteria) // success to fully open, (1st motion for right) 
                 // if (iframe_top < criteria || y_move > 50) // success to fully open, (1st motion for right) 
-                if (scroll_y + parent.window.innerHeight >= 0.90*scroll_height && y_move > 50)
+                if (scroll_y + parent.window.innerHeight >= 0.98*scroll_height && y_move > criteria) // at the bottom and move_scroll upward => open iframe
                 {
                     console.log('parent window, success to open: iframe_top: '+iframe_top);
-                    open_status = animation_promise('open', false); // bug only in ios(right: not stop in 1st motion)
+                    open_status = animation_promise('open'); // bug only in ios(right: not stop in 1st motion)
                 }
-
             }
-
             // release move event
             $(window).off('mousemove');
             $(window).off('touchmove');
@@ -579,29 +535,13 @@ if($model == 'right')
 
 
     });
-
-
-
-    //// detect scrolling direction
-    // var lastScrollTop = 0;
-
-    // // element should be replaced with the actual target element on which you have applied scroll, use window in case of no target element.
-    // element.addEventListener("scroll", function(){ // or window.addEventListener("scroll"....
-    // var st = window.pageYOffset || document.documentElement.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
-    // if (st > lastScrollTop){
-    //     // downscroll code
-    // } else {
-    //     // upscroll code
-    // }
-    // lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-    // }, false);
+/////////////////////////////////////////////////////////////////////////// end of listener ///////////////////////////////////////////////////////////////////
 
 
 
 
     //// function
-
-
+    // main for execute animation and css in order
     function animation_promise(motion, in_half_open=true) // animation + css setting, motion='open', 'close', return promise
     {
         var model = '<?php echo $model; ?>';
@@ -625,13 +565,8 @@ if($model == 'right')
                             // set_parent_scroll(0, top_position) // disable scrolling
                         })
                     })
-
                     var open_status = 1;
-                    
-                }
-                else // add 2nd segment, in_half_open=true
-                {
-                    // promise = animation('open', true);
+                } else { // add 2nd segment, in_half_open=true                
                     $.when(
                         set_parent_scroll(0, top_position), // confirm to disable scrolling
                         // animation('open', false)
@@ -645,13 +580,10 @@ if($model == 'right')
 
                     var open_status = 2;
                 }      
-            }
-            else if (motion == 'close') // to close
-            {
+            } else if (motion == 'close') { // to close            
                 // set_parent_scroll(1, top_position); // enable scrolling
                 if (in_half_open) // in half open state => close half
                 {
-
                     $.when(
                         set_parent_scroll(1, top_position) // confirm to enable scrolling
                     ).done( () => {
@@ -662,21 +594,13 @@ if($model == 'right')
                         })
                     })                    
                
-                }
-                else // in fully open state => close all
-                {
-
+                } else { // in fully open state => close all
                     $.when(
                         set_parent_scroll(1, top_position) // confirm to enable scrolling
-                        // animation('close', false).promise() // 1st
                     ).done( () => {
                         animation('close', false) // 1st
-                        // animation('close', true).promise()  // 2nd           
                         .done( () => {
                             animation('close', true) // 2nd   
-                            // set_parent_scroll(1, top_position),
-                            // css_close_showdiv(model),
-                            // css_close_hidediv(model)
                             .done( () => {
                                 css_close_showdiv(model),
                                 css_close_hidediv(model)
@@ -686,10 +610,7 @@ if($model == 'right')
                 }
                 var open_status = 0;
             }
-        }
-        else if (model == "bottom")
-        // else // bottom case
-        {
+        } else if (model == "bottom") {
             if (motion == 'open') // to open
             {
 
@@ -698,33 +619,10 @@ if($model == 'right')
                     // set_parent_scroll(0, top_position), // confirm to disable scrolling, don't use this in ios
                 ).done( () => {
                     css_fullyopen()
-                    // set_parent_scroll(0, top_position) // confirm to disable scrolling, don't use this in ios
+                    set_parent_scroll(0, top_position) // confirm to disable scrolling, don't use this in ios
                 })
-
-
-                // $.when(
-                //     // set_parent_scroll(0, top_position), // confirm to disable scrolling, don't use this in ios
-                // ).done( () => {
-                //     animation('open')
-                //     .done( () => {
-                //         css_fullyopen()
-                //     })
-                // })
-
-                // set_parent_scroll(0, top_position); // disable scrolling
-                // promise = animation('open');
-                // animation('open').done(()=>{
-                //     css_fullyopen();
-                //     set_parent_scroll(0, top_position); // disable scrolling
-                // });
-
-                // av_bottom_open = await animation('open');
-                // css_fullyopen(av_bottom_open);
                 var open_status = 2;
-            }
-            else // to close
-            {
-
+            } else { // to close
                 $.when(
                     set_parent_scroll(1, top_position) // confirm to enable scrolling
                     ).done( () => {
@@ -734,21 +632,6 @@ if($model == 'right')
                             // css_close_hidediv(model)
                         })
                     })    
-
-
-
-
-                // set_parent_scroll(1, top_position); // disable scrolling
-                // promise = animation('close');
-                // animation('close').done(()=>{
-                //     css_close_showdiv(model);
-                //     css_close_hidediv(model);
-                //     set_parent_scroll(1, top_position); // disable scrolling            
-                // });
-
-                // av_bottom_close = await animation('close');
-                // css_1 = await css_close_showdiv(model);
-                // css_2 = await css_close_hidediv(model);
                 var open_status = 0;
             }
         }
@@ -769,18 +652,9 @@ if($model == 'right')
                 {
                     promise = element.animate({left: '100vw'}, 300).promise();
                     console.log('animation, model:right, motion:To close, in half open state, to close');
-                }
-                else // to close, in fully open (two motion, 1st motion first)
-                {
+                } else { // to close, in fully open (two motion, 1st motion first)
+                
                     promise = element.animate({top: '40vh'}, 300).promise();
-                    // $('#avividai_recommend_iframe', parent.document).animate({top: '40vh'}, 300);
-                    // $('#avividai_recommend_iframe', parent.document).promise().then(function() {
-                    //     $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, 300);
-                    // });
-                    // av_right_close_1 = await animation_right_close(1); // 1st motion to close
-                    // animation_right_close(2, av_right_close_1); // 2nd motion to close
-
-                    // av_right_close_2 = await animation_right_close(2, av_right_close_1); // 2nd motion to close
                     console.log('animation, model:right, motion:To close, in fully open state, to close');
                 }
             }
@@ -789,31 +663,20 @@ if($model == 'right')
                 if (in_half_open) // to fully open, in half open=true
                 {
                     promise = element.animate({top: 0}, 200).promise();
-                    // promise = element.animate({bottom: 0}, 200).promise();
-
                     console.log('animation, model:right, motion:To open, in half open state, to fully open (2nd motion)');
-                }
-                else
-                {
+                } else {
                     promise = element.animate({left: 0}, 500).promise();
                     console.log('animation, model:right, motion:To open, in close state, to half open (1st motion)');
                 }
 
-                // in_half_open? $('#avividai_recommend_iframe', parent.document).animate({top: 0}, 200) : $('#avividai_recommend_iframe', parent.document).animate({left: 0}, 500);
-                // console.log('animation, motion:To open, in fully open state, to close');
-
             }
-        }
-        else if (model == "bottom")
-        {
+        } else if (model == "bottom") {
             if (motion == 'close') // close event
             {
                 promise = element.animate({top: '100vh'}, 300).promise();
                 console.log('animation, model:bottom, motion:To close, to close');
 
-            }
-            else if (motion == 'open') // open event
-            {
+            } else if (motion == 'open') { // open event            
                 promise = element.animate({top: 0}, 500).promise();
                 console.log('animation, model:bottom, motion:To open, to open');
             }
@@ -829,21 +692,6 @@ if($model == 'right')
     }
 
 
-
-
-    // not used
-    function default_animation(motion, timeout) // motion: 0 for close, 1 for open
-    {
-        var model = '<?php echo $model; ?>';
-        if(model == "right")
-        {
-            motion==0? $('#avividai_recommend_iframe', parent.document).animate({left: '100vw'}, timeout): $('#avividai_recommend_iframe', parent.document).animate({left: '90vw'}, timeout);
-        }
-        else
-        {
-            motion==0? $('#avividai_recommend_iframe', parent.document).animate({top: '100vh'}, timeout): $('#avividai_recommend_iframe', parent.document).animate({top: '94vh'}, timeout);
-        }
-    }
 
     //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
     function css_close_showdiv_ran(model)
@@ -917,20 +765,12 @@ if($model == 'right')
     //// hidden samll div to toggle, open_status=0, scroll up (two version, right and bottom)
     function css_close_hidediv(model)
     {
-        // var top_position = window.parent.pageYOffset;
-        // console.log('css_close_hidediv, top_position: '+top_position);
-        if (model == 'right')
-        {
+        if (model == 'right') {
             $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '', left: '100vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
-        }
-        else
-        {
+        } else {
             // $('#avividai_recommend_iframe', parent.document).css({display:'block', top:'100vh', bottom: 0, height: '100vh', width: '100vw', left: 0});
             $('#avividai_recommend_iframe', parent.document).css({display:'block', top:'', bottom:'-100vh', height: '100vh', width: '100vw', left: 0});
-
         }
-        // set_parent_scroll(1, 500);
-
     }
 
     //// for model=right, half open (open_status = 1, right only)
@@ -977,7 +817,6 @@ if($model == 'right')
             window.parent.document.body.style.top = -top_position+'px';
             window.parent.document.body.style.position = "fixed"; // extra required for ios
             window.parent.document.body.style.overflow = "hidden"; // close scrolling
-            console.log('scrolling position: '+top_position);
             
         }
         else if (state == 1) 
@@ -1032,19 +871,6 @@ if($model == 'right')
             $(".body_row_one").css('margin-top', 0); // move image of items to the top
             $('#right_arrow_btn').hide(); //關閉箭頭
         }
-
-        //// not used yet
-        // if(model == "bottom_product")
-        // {
-        //     get_item('guess') //抓猜你喜歡
-
-        //     $('._init_').hide();
-        //     $('body').css({height: '100%', overflow: 'hidden'}); //關閉卷軸滑動
-        //     $(".body_row_one").css('margin-top', 0);
-
-        //     $('#right_arrow_btn').hide(); //關閉箭頭
-        // }
-
         $('.block_overlay').show();
     }
 
@@ -1067,6 +893,7 @@ if($model == 'right')
         $('#window_title').text('');
         $('#item_div').css("height", "100vh");
         css_fullyopen();
+
         // setTimeout(function() {
         //     $('#reback_btn').hide(); // hide reback_arrow
         //     $('#body_iframe').html(''); // clear item url iframe
@@ -1082,7 +909,7 @@ if($model == 'right')
     }
 
     // get "guess your like" or "others also watch"
-    function get_item(type)
+    function get_item(type='guess')
     {
         var web_id         = '<?php echo $web_id; ?>';
         var uuid           = '<?php echo $uuid; ?>'; 
@@ -1094,7 +921,7 @@ if($model == 'right')
         // const type         = 'guess';
         // var web_id   = 'underwear';
         // var title    = ''
-        console.log(type + ' web_id is '+web_id)
+        console.log(type + ' web_id is '+web_id+', website_type: '+website_type);
 
         $('#recommend_body_div').html(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(255, 255, 255); display: block; shape-rendering: auto; margin-top: 150px" width="30px" height="30px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
             <circle cx="50" cy="50" r="32" stroke-width="8" stroke="#fe718d" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
@@ -1178,10 +1005,7 @@ if($model == 'right')
         {
             route = 'https://rhea-cdn.advividnetwork.com/api/productMedia?web_id='+web_id+'&title='+title+'&type='+type;
         }
-        else // nothing
-        {
-            route = '_';
-        }
+
         return route
     }
 
@@ -1212,21 +1036,13 @@ if($model == 'right')
         useragent = useragent.toLowerCase();   
                          
         // if (useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1)
-        if (useragent.indexOf('iphone') != -1)
-        {
+        if (useragent.indexOf('iphone') != -1) {
             platform = 'ios';
-        }
-        else if (useragent.indexOf('ipad') != -1 )
-        {
+        } else if (useragent.indexOf('ipad') != -1 ) {
             platform = 'ipad';
-        }
-             
-        else if (useragent.indexOf('android') != -1 )
-        {
+        } else if (useragent.indexOf('android') != -1 ) {
             platform = 'android';
-        }                    
-        else
-        {
+        } else {
             platform = 'pc';
         }
         return platform
@@ -1240,54 +1056,41 @@ if($model == 'right')
             PosY = e.screenY; // pc
             PosX = (e.screenX < 0? window_X+e.screenX : e.screenX);
             PosX = (e.screenX > window_X? e.screenX-window_X : PosX);
-            console.log('posX is '+PosY+' raw screenX: '+e.screenY+' raw pageX: '+e.pageY+' raw clientX: '+e.clientY);
+            // console.log('posX is '+PosY+' raw screenX: '+e.screenY+' raw pageX: '+e.pageY+' raw clientX: '+e.clientY);
 
-        }
-        else if (platform == 'ios')
-        {
+        } else if (platform == 'ios') {
 
             PosY = (typeof(e.touches)!="undefined"?e.touches[0].screenY : 0); // mobile
             // PosY = (PosY>parent.window.innerHeight? PosY-parent.window.innerHeight : PosY)
             if (typeof(e.touches)!="undefined")
             {
                 PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
-                console.log('posY is '+PosY+' raw pos: '+ e.touches[0].screenY+ ' jquery targetTouches: '+ e.originalEvent.targetTouches[0].screenY+ ' jquery changedTouches: '+e.originalEvent.changedTouches[0].screenY)+ ' jquery targetTouches: '+e.originalEvent.targetTouches[0].screenY;
-            }
-            else
-            {
+                // console.log('posY is '+PosY+' raw pos: '+ e.touches[0].screenY+ ' jquery targetTouches: '+ e.originalEvent.targetTouches[0].screenY+ ' jquery changedTouches: '+e.originalEvent.changedTouches[0].screenY)+ ' jquery targetTouches: '+e.originalEvent.targetTouches[0].screenY;
+            } else {
                 PosX = 0
             }
 
-        }
-        else if (platform == 'ipad')
-        {
+        } else if (platform == 'ipad') {
 
             PosY = (typeof(e.touches)!="undefined"?e.touches[0].screenY : 0); // mobile
             PosY = (PosY>parent.window.innerHeight? PosY-parent.window.innerHeight : PosY)
             if (typeof(e.touches)!="undefined")
             {
                 PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
-                console.log('posY is '+PosY+' raw pos: '+ e.touches[0].screenY+ ' jquery targetTouches: '+ e.originalEvent.targetTouches[0].screenY+ ' jquery changedTouches: '+e.originalEvent.changedTouches[0].screenY)+ ' jquery targetTouches: '+e.originalEvent.targetTouches[0].screenY;
-            }
-            else
-            {
+                // console.log('posY is '+PosY+' raw pos: '+ e.touches[0].screenY+ ' jquery targetTouches: '+ e.originalEvent.targetTouches[0].screenY+ ' jquery changedTouches: '+e.originalEvent.changedTouches[0].screenY)+ ' jquery targetTouches: '+e.originalEvent.targetTouches[0].screenY;
+            } else {
                 PosX = 0
             }
 
-        }
-        else // android 
-        {
+        } else { // android
 
             PosY = (typeof(e.touches)!="undefined"?e.touches[0].screenY : 0); // mobile
             if (typeof(e.touches)!="undefined")
             {
                 PosX = (e.touches[0].screenX < 0? window_X+e.touches[0].screenX : e.touches[0].screenX); // mobile
-            }
-            else
-            {
+            } else {
                 PosX = 0
             }
-
 
         }
         
@@ -1296,7 +1099,7 @@ if($model == 'right')
     }
 
 
-    // JS version
+    // JS version, not used yet
     function preventDefault(e){
         e.preventDefault();
     }
