@@ -43,7 +43,6 @@ if(isset($_GET["model"]) == true)
         border: 1px solid #aaaaaa;
         }
 
- 
     </style>
 
     <script>
@@ -61,28 +60,14 @@ if(isset($_GET["model"]) == true)
         redirect_url = (current_model == 1? 'https://www.likr.com.tw/rick/recommend2/index.php?test=2' : 'https://www.likr.com.tw/rick/recommend2/index.php?test=1');
         location.replace(redirect_url);
     }
-
     </script>
 
 
-    <?php if($model == "bottom"): ?>
-        <script src="avividai_recommend_config.js?<?php echo date('Ymdhis'); ?>"></script>
-    <?php elseif($model == "bottom_product"): ?>
-        <script src="avividai_recommend_config_product.js?<?php echo date('Ymdhis'); ?>"></script>
-    <?php else: ?>
-        <script src="avividai_recommend_config_right.js?<?php echo date('Ymdhis'); ?>"></script>
-    <?php endif; ?>
+    <!-- <script src="avividai_recommend_config.js"></script>
+    <script src="avividai_recommend.js"></script> -->
 
-    <script src="avividai_recommend.js?<?php echo date('Ymdhis'); ?>"></script>
-    <script src="anime.min.js?<?php echo date('Ymdhis'); ?>"></script>
-<style>
+    <!-- <script src="anime.min.js"></script> -->
 
-    img, p, table{
-        /* width: 100vw; */
-        /* height: 100vh; */
-    }
-
-</style>
 
 </head>
 
@@ -90,6 +75,9 @@ if(isset($_GET["model"]) == true)
 
 
 <body style="height: 2000px" style="">
+
+<iframe src="avividai_recommend.php?web_id=i3fresh&title=_&model=bottom&website_type=3&recommend_type=1" id="avividai_recommend_iframe"></iframe>
+
 
 <button onclick="change_model()" type="button" style="position: sticky; top: 10vh; margin-left: 70vw; width: 10vmax; height: 10vmin; font-size: 3vmin;">Change mode</button>
 
@@ -129,13 +117,8 @@ if(isset($_GET["model"]) == true)
 
 
 
-
-
-
-
-<?php echo $html; ?>
-
-    <iframe src="avividai_recommend.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0" style="z-index: 999; background-color: transparent; position: fixed;"></iframe>
+    <!-- <iframe src="avividai_recommend.php" id="avividai_recommend_iframe" data-status="start" data-height="0" data-width="0" style="background-color: transparent; position: fixed;"></iframe> -->
+    
 
 </body>
 </html>

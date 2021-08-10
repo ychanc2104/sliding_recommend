@@ -45,7 +45,8 @@ if($model == 'right')
     <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>-->
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
+    <script src="jquery.blockUI.js"></script>
+    <script src="anime.min.js?<?php echo date('Ymdhis'); ?>"></script>
 
     <?php if($model == "bottom"): ?>
         <script src="avividai_recommend_config.js?<?php echo date('Ymdhis'); ?>"></script>
@@ -56,7 +57,7 @@ if($model == 'right')
     <style>
         .sticky_top
         {
-            position : fixed;
+            position : sticky;
             top : 0;
         }
     </style>
@@ -136,7 +137,7 @@ if($model == 'right')
 
     $(function() {
 
-        // function, AviviD
+        // function
         function clear_all_scroll_timeout()
         {
             for (i=0; i<all_timeout_scroll.length; i++)
@@ -172,6 +173,7 @@ if($model == 'right')
         var timeout_scroll = null; // timeout for scrolling event
         var all_timeout_scroll = [];
         // var promise = $('#avividai_recommend_iframe', parent.document).promise();
+        var promise = $('#avividai_recommend_iframe', parent.document).promise();
         
         //// wait for .php to read parameters
         setTimeout( () => {
@@ -383,42 +385,6 @@ if($model == 'right')
             open_status = 2;
         });
 
-        //// listener to execute back button in iframe       
-        history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-        $(window).on('popstate', function(e) {
-            console.log('back-button detected, open_status: '+open_status+', history length: '+history.length+', parent history length: '+parent.window.history.length);
-            if (open_status == 1 || open_status == 2) // in main iframe page
-            {
-                e.preventDefault();
-                console.log('lock back button, half-open or fully-open');
-                history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-            }
-            else if (open_status == 3) // in item-page, go to last page
-            {
-                e.preventDefault();
-                console.log('lock back button, in item-page');
-                reback();
-                open_status = 2;
-                history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-            }
-            else
-            {
-                console.log('do nothing, back :');
-                history.go(-2); // go back twice
-                // do nothing
-            }
-        });
-
-
-
-
-
-
-
-
-
-
-
         //// listener to show or hide small iframe during scrolling
         var lastScrollTop = 0; //0 means there were never any requests sent
         var scroll_y = 0;
@@ -513,7 +479,31 @@ if($model == 'right')
 
 
 
-
+        //// listener to execute back button in iframe       
+        history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+        $(window).on('popstate', function(e) {
+            console.log('back-button detected, open_status: '+open_status+', history length: '+history.length+', parent history length: '+parent.window.history.length);
+            if (open_status == 1 || open_status == 2) // in main iframe page
+            {
+                e.preventDefault();
+                console.log('lock back button, half-open or fully-open');
+                history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+            }
+            else if (open_status == 3) // in item-page, go to last page
+            {
+                e.preventDefault();
+                console.log('lock back button, in item-page');
+                reback();
+                open_status = 2;
+                history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+            }
+            else
+            {
+                console.log('do nothing, back :');
+                history.go(-2); // go back twice
+                // do nothing
+            }
+        });
 
 
 /////////////////////////////////////////////////////////////////////////// end of listener ///////////////////////////////////////////////////////////////////
@@ -1030,27 +1020,27 @@ if($model == 'right')
     }
 
 
-    // function get_title()
-    // {
-    //     let element_meta_title = parent.document.querySelector("meta[property='og:title']");
-    //     let element_title = parent.document.querySelector("title");
-    //     let title = element_meta_title !== null ? element_meta_title.getAttribute('content') : element_title.innerHTML;
-    //     return title;
-    // }
+    function get_title()
+    {
+        let element_meta_title = parent.document.querySelector("meta[property='og:title']");
+        let element_title = parent.document.querySelector("title");
+        let title = element_meta_title !== null ? element_meta_title.getAttribute('content') : element_title.innerHTML;
+        return title;
+    }
 
 
     // JS version, not used yet
-    // function preventDefault(e){
-    //     e.preventDefault();
-    // }
+    function preventDefault(e){
+        e.preventDefault();
+    }
 
-    // function disableScroll(){
-    //     parent.document.body.addEventListener('touchmove', preventDefault, { passive: false });
-    // }
+    function disableScroll(){
+        parent.document.body.addEventListener('touchmove', preventDefault, { passive: false });
+    }
 
-    // function enableScroll(){
-    //     parent.document.body.removeEventListener('touchmove', preventDefault);
-    // }
+    function enableScroll(){
+        parent.document.body.removeEventListener('touchmove', preventDefault);
+    }
 
 
     </script>
