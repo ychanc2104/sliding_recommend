@@ -50,15 +50,12 @@ if($model == 'right')
 
 
     <style>
-        .sticky_top
-        {
-            position : fixed;
-            top : 0;
-        }
+
+
     </style>
 </head>
 
-<body class="sticky_topxx" style="background-color: transparent; overflow: hidden;">
+<body style="background-color: transparent; overflow: hidden;">
     <img src="img/left_close_arrow2.png?20210604" id="avivid_left_arrow_btn" style="width:35px; height:35px; position: absolute; top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
     <img src="img/right_close_arrow2.png?20210604" id="avivid_right_arrow_btn" style="width:35px; height:35px; position: absolute; right: 0;top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
 
@@ -79,7 +76,7 @@ if($model == 'right')
 
     <div id="avivid_recomm_wrapper" class="container" style="max-width: 100%; margin-left: -1vmax;">
         <!--浮動標題列 rgba(116,116,116,0.5)-->
-        <div class="row" id="avivid_row_header" style="background-color: rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0px; right: 0; left: 0; margin:0 0 20px 0; height:6vh; z-index:10;">
+        <div class="row" id="avivid_row_header" style="display:none; background-color: rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0px; right: 0; left: 0; margin:0 0 20px 0; height:6vh; z-index:10;">
             <div class="col-2">
                 <div id="avivid_reback_btn" style="color: #9f9f9f; text-align: left; height: 60px; line-height: 6vh; z-index:99">
                     <svg xmlns="http://www.w3.org/2000/svg" width="36px" height="36px" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
@@ -121,12 +118,12 @@ if($model == 'right')
             <div class="col">
                 <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -1.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
                     <div class="row">
-                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 12px 0 36px">
+                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 1vw 0 9vw">
                             <b style="font-size: 20px">猜你喜歡</b>
                             <div class="bg-dark" style="height: 10px">&nbsp</div>
                         </div>
 
-                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 36px 0 12px">
+                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 4vw 0 6vw">
                             <b class="text-gray" style="font-size: 20px">別人也看了</b>
                             <div class="bg-gray" style="height: 10px">&nbsp</div>
                         </div>
@@ -143,23 +140,20 @@ if($model == 'right')
         var AviviD = (typeof(AviviD) == 'undefined'? {} : AviviD);
 
         $(function() {
-
-
             AviviD.config = 
             {
                 "web_id": 'i3fresh', // underwear for e-comm, babyhome for media
                 "title" : 'default',
-                "model" : "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
+                "model": "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
                 "website_type": 3, // 1:media, 2:blog, 3:E-commerce
                 "recommend_type": 1 // 1:article, 2:e-commerce
             }
-
 
             //// inside function, 
             AviviD.get_item = function(type='guess') {
                 let web_id         = AviviD.config.web_id;
                 let title          = AviviD.config.title; 
-                title = (type=='also'? '鮮凍蔬果原汁24入自由選': title)
+                title = (type=='also'? 'i3Fresh 愛上新鮮 - 總統級超厚霜降牛排21oz': title)
                 let website_type   = AviviD.config.website_type;
                 let recommend_type = AviviD.config.recommend_type;
                 // let iframe = $('#avividai_recommend_iframe');
@@ -168,10 +162,7 @@ if($model == 'right')
                     if(callback == 'error') {
                         return false; // early return
                     }
-                    console.log('clear items div');
                     $('#avivid_recommend_body_div').html(''); // clear items div
-                    console.log('finish clearing items div');
-
                     var i = 0;
                     if (website_type==1 || website_type==2) // There are ad mixing in, shuffle ad into article 
                     {
@@ -193,9 +184,9 @@ if($model == 'right')
 
                         $('#avivid_recommend_body_div').append(html);
 
-                        if(i >= 2 && i <= 4) {
-                            $('#avivid_recommend_iframe > div').append(html);
-                        }
+                        // if(i >= 2 && i <= 4) {
+                        //     $('#avivid_recommend_iframe > div').append(html);
+                        // }
 
                         i++;
                     });
@@ -255,6 +246,11 @@ if($model == 'right')
             }
 
 
+
+
+
+
+
             //// fully open state (open_status = 2, right = bottom) 
             AviviD.css_fullyopen = function() {
                 $('.avivid_block_overlay').hide(); //半透明遮罩
@@ -276,7 +272,7 @@ if($model == 'right')
                 data = {};
                 data.open_status = open_status;
                 window.parent.postMessage(data, "*"); 
-                console.log('transmit to parent: data: '+data);
+                // console.log('transmit to parent: data: '+data);
             }
 
 
@@ -284,6 +280,7 @@ if($model == 'right')
             setTimeout( () => {
                 AviviD.get_item('guess'); //抓猜你喜歡
                 AviviD.css_close_showdiv('bottom');
+
             }, 1000);
 
             // initialize open_status
@@ -294,10 +291,9 @@ if($model == 'right')
                 // if (e_msg.origin !== "http://www.42du.cn") {
                 //     return;
                 // }
-
                 data = e_msg.originalEvent.data;
-                console.log(data);
-                console.log('now open_status: '+data.open_status+', previous open_status: '+AviviD.open_status);
+                // console.log(data);
+                // console.log('now open_status: '+data.open_status+', previous open_status: '+AviviD.open_status);
 
                 var scroll_height = data.scroll_height;
                 var scroll_y = data.scroll_y;
@@ -325,13 +321,34 @@ if($model == 'right')
 
             });
 
+            AviviD.window_Y = document.getElementById('parent_window_y').innerHTML; // update parameter
+
+
+            //// back to all items page(猜你喜歡 & 別人也看了), cand confrim to fully open
+            AviviD.reback = function() {
+                // $('#body_iframe').animate({height:"0"}, 800); // make items disappeared
+                // css_fullyopen();
+                $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+                $('#avivid_body_iframe').css({'background-color': 'white'});
+                $('#avivid_body_iframe').css({top: '100vh'});
+                $('#avivid_recommend_iframe').hide().attr("data-status", "end"); 
+                $('#avivid_reback_btn').hide(); // hide reback_arrow
+                $('#avivid_body_iframe').html(''); // clear item url iframe
+                $('#avivid_body_iframe').hide(); // hidden item url iframe to show all items page
+                $('#avivid_item_div').show();
+                $('#window_title').text('');
+                $('#avivid_item_div').css("height", "100vh");
+                AviviD.css_fullyopen();
+            }
+
+
             // to close
             $('#avivid_close_window_btn').on('touchstart', function(e) {
-                console.log('iframe touchstart');
-                AviviD.transmit_to_parent(0); // transmit open_status = 0 to parent
-                // AviviD.css_fullyopen();
+                AviviD.reback();
+                AviviD.css_close_showdiv(AviviD.config.model);
+                AviviD.open_status = 0;
+                AviviD.transmit_to_parent(AviviD.open_status); // transmit open_status = 0 to parent
             });
-
 
 
             //選項卡
@@ -364,6 +381,8 @@ if($model == 'right')
                     let window_y = document.getElementById('parent_window_y').innerHTML;
                     let open_size = window_y*0.9;
                     AviviD.open_status = 3; // in item state
+                    AviviD.transmit_to_parent(AviviD.open_status);
+                    console.log('click item, open_status: '+AviviD.open_status);
                     // create iframe linked to clicked item page
                     if (AviviD.platform=='ios') // there are bottom tap in ios
                     {
@@ -394,49 +413,44 @@ if($model == 'right')
                 // e.preventDefault();
                 AviviD.reback();
                 AviviD.open_status = 2;
+                AviviD.transmit_to_parent(AviviD.open_status);
             });
 
-            //// back to all items page(猜你喜歡 & 別人也看了), cand confrim to fully open
-            AviviD.reback = function() {
-                // $('#body_iframe').animate({height:"0"}, 800); // make items disappeared
-                // css_fullyopen();
-                $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
-                $('#avivid_body_iframe').css({'background-color': 'white'});
-                $('#avivid_body_iframe').css({top: '100vh'});
-                $('#avivid_recommend_iframe').hide().attr("data-status", "end"); 
-                $('#avivid_reback_btn').hide(); // hide reback_arrow
-                $('#avivid_body_iframe').html(''); // clear item url iframe
-                $('#avivid_body_iframe').hide(); // hidden item url iframe to show all items page
-                $('#avivid_item_div').show();
-                $('#window_title').text('');
-                $('#avivid_item_div').css("height", "100vh");
-                AviviD.css_fullyopen();
-            }
+
 
             //// listener to execute back button in iframe       
-            history.pushState(null, null, '/');
+            window.history.pushState(null, null, null);
             $(window).on('popstate', function(e) {
+                console.log('popstate: open_status:'+AviviD.open_status)
                 if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
                     e.preventDefault();
-                    console.log('lock back button, half-open or fully-open');
-                    history.pushState(null, null, '/');
+                    console.log('lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
+                    window.history.pushState(null, null, null);
                 } else if (AviviD.open_status == 3) { // in item-page, go to last page               
                     e.preventDefault();
-                    console.log('lock back button, in item-page');
+                    console.log('lock back button, in item-page, open_status: '+AviviD.open_status);
                     AviviD.reback();
                     AviviD.open_status = 2;
-                    history.pushState(null, null, '/');
+                    AviviD.transmit_to_parent(AviviD.open_status);
+                    window.history.pushState(null, null, null);
                 } else {
-                    console.log('do nothing, back :');
-                    history.go(-2); // go back twice
+                    // e.preventDefault();
+                    console.log('do nothing, back, open_status: '+AviviD.open_status);
+                    // history.go(-2); // go back twice
                     // do nothing
                 }
             });
 
 
 
-
-
+        //     //// inside function, use for dynamically adjusting height of item page
+        //     setInterval( () => {
+        //         if (AviviD.open_status == 2 || AviviD.open_status == 3) { // when height changed
+        //             AviviD.window_Y = document.getElementById('parent_window_y').innerHTML; // update window_Y
+        //             let open_item_size = AviviD.platform=='ios'? AviviD.window_Y*0.86:AviviD.window_Y*0.91;
+        //             $('#avividai_item_iframe').css({height: open_item_size+'px'}); //
+        //         }
+        //     }, 2000);
 
         });
 

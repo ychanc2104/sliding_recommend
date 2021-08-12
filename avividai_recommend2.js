@@ -1,18 +1,92 @@
+
+// setTimeout( () => {
+
+// },5000);
+
+// 1. insert css
+var link = document.createElement( "link" );
+link.type = "text/css";
+link.rel = "stylesheet";
+link.href = "https://www.likr.com.tw/rick/recommend2/avividai_recommend.css";
+document.getElementsByTagName( "head" )[0].appendChild( link );
+
+// 2. insert iframe
+$('body').append('<div id="avivid_iframe_warpper"><div id="avivid_iframe_handle"></div></div>')
+$('#avivid_iframe_warpper').append('<iframe src="https://www.likr.com.tw/rick/recommend2/avividai_recommend_cors.php" id="avividai_recommend_iframe"></iframe>')
+
+
+// 3. insert js
 var AviviD = typeof(AviviD) == 'undefined'? {} : AviviD;
+console.log(navigator.userAgent);
 //// document ready
-$(function() {
-    console.log('document ready');
+// $(function() {
+//     console.log('document ready');
     // $('#avividai_recommend_iframe').on('load', function() {   
 
         AviviD.receiver = document.getElementById('avividai_recommend_iframe').contentWindow;
-        AviviD.open_status = 0; // 0: fully close, 1: half-open, 2: fully open, 3: in item-page, 4: in the bottom
+        AviviD.open_status = 0; // -1: fully close, 0: close but show div, 1: half-open, 2: fully open, 3: in item-page, 4: in the bottom, 5: in opening
+
+        
+
+
+        // //// get item title
+        // AviviD.get_class_title = function() {
+        //     let element = document.getElementsByClassName('title');
+        //     let title = (typeof(element[0])=='undefined'? 'default' : element[0].innerHTML);
+
+        //     $.ajax({
+        //         type: 'GET', //or POST i don't know which one
+        //         url: url, //or should this be the url: ?
+        //         success: function(data){
+        //           //data should be the DOM of the second page
+        //           $html = $(data);
+        //           $html.find('.col1 .child').appendTo('.col1');
+        //           $html.find('.col2 .child').appendTo('.col3');
+        //           $html.find('.col3 .child').appendTo('.col3');
+        //         }
+        //       });
+
+
+
+
+        //     return title
+        // };
+
+
+        // AviviD.fetch_title = function(url) {
+        //     return new Promise((resolve, reject) => {
+        //         $.ajax({
+        //             type: 'GET',
+        //             url: url,
+        //             dataType: 'json',
+        //             data: <data would like to send>,
+        //             success: function (res) {
+        //                 Number(res.status) === 1 ? resolve(true) : resolve(false)
+        //             },
+        //             fail: function (xhr, ajaxOptions, thrownError) {
+        //                 reject(false)
+        //             },
+        //         })
+        //     })
+        // }
+
+
+
+        // AviviD.get_DOM_by_url = async function() {
+
+
+        // }
+
+
+        // AviviD.title_class = ['default', 'default']; // size of two
 
         AviviD.transmit_to_iframe = function(open_status=0) {
-            var scroll_y = window.pageYOffset;
+            let scroll_y = window.pageYOffset;
             // var scroll_y = scroll_y==0? -window.document.body.style.top.split('px')[0] : scroll_y;
-            var window_x = window.innerWidth;
-            var window_y = window.innerHeight;
-            var scroll_height = document.body.scrollHeight;
+            let window_x = window.innerWidth;
+            let window_y = window.innerHeight;
+            let scroll_height = document.body.scrollHeight;
+            // let title = AviviD.get_class_title();
             // var open_status = AviviD.open_status;
 
             data = {};
@@ -23,7 +97,7 @@ $(function() {
             data.open_status = open_status;
 
             AviviD.receiver.postMessage(data, "*"); 
-            console.log('transmit: top_position: '+scroll_y+', data: '+data);
+            // console.log('transmit: top_position: '+scroll_y+', data: '+data);
         }
 
 
@@ -51,11 +125,9 @@ $(function() {
 
         AviviD.model = AviviD.config.model;
         AviviD.PosX_click = AviviD.PosY_click = null;
-        AviviD.Pos_move_release = null;
+        AviviD.Pos_click = AviviD.Pos_move_release = null;
 
-        AviviD.Pos_click = null;
-        AviviD.distance_move = null;
-        AviviD.delta_distance = 0;
+        AviviD.Pos_click = AviviD.distance_move = null;
 
         // timeout events
         AviviD.timeout_scroll = null; // timeout for scrolling event
@@ -65,12 +137,14 @@ $(function() {
         AviviD.get_device_type = function() {
             var useragent = navigator.userAgent;
             useragent = useragent.toLowerCase();
-            // if (useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1)
+            // if (useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1) {
             if (useragent.indexOf('iphone') != -1 ) {
                 platform = 'ios';
-            } else if (useragent.indexOf('ipad') != -1 ) {
+            } 
+            else if (useragent.indexOf('ipad') != -1 ) {
                 platform = 'ipad';
-            } else if (useragent.indexOf('android') != -1 ) {
+            } 
+            else if (useragent.indexOf('android') != -1 ) {
                 platform = 'android';
             } else {
                 platform = 'pc';
@@ -78,6 +152,7 @@ $(function() {
             return platform
         }
         AviviD.platform = AviviD.get_device_type();
+        console.log('platform: '+AviviD.platform);
 
         if (AviviD.platform == 'pc') {
             AviviD.event = {
@@ -171,6 +246,20 @@ $(function() {
             
         }
 
+
+        AviviD.set_scrollableX = function(state='enable') {
+            if (state == 'disable') {
+                window.document.body.style.overflowX = "hidden";
+                window.document.body.style.position = "absolute"
+            } else if (state == 'enable') {
+                window.document.body.style.overflowX = "auto";
+                window.document.body.style.position = ""
+
+            }
+
+        }
+
+
         AviviD.get_iframe_size = function() {
             let model = AviviD.config.model;
             let window_size = AviviD.window_size;
@@ -230,25 +319,21 @@ $(function() {
             } else if (model == "bottom") {
                 if (motion == 'open') { // to open                 
                     promise = $.when(
-                        // promise = AviviD.animation('open')
                         AviviD.animation('open')
-
                     ).done( () => {
-                        // AviviD.receiver.AviviD.css_fullyopen() // to be changed, CORS alert
                         $('#avivid_iframe_handle').css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw'});
                         $('#avivid_iframe_handle').css({display:'none'});
                         $('#avividai_recommend_iframe').css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw'}); // required
-                        AviviD.set_scrollable('disable', scroll_y) // confirm to disable scrolling, don't use this in ios
+                        // AviviD.set_scrollable('disable', scroll_y) // confirm to disable scrolling, don't use this in ios
                     })
                     var open_status = 2;
                 } else { // to close
                     promise = $.when(
-                        AviviD.set_scrollable('enable', scroll_y) // confirm to enable scrolling
+                        AviviD.platform!='ios'?AviviD.set_scrollable('enable', scroll_y) : '' // confirm to enable scrolling
                         ).done( () => {
                             // promise = AviviD.animation('close')
                             AviviD.animation('close')
                             .done( () => {
-                                // AviviD.receiver.AviviD.css_close_showdiv() // to be changed, CORS alert
                                 $('#avividai_recommend_iframe').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
                                 $('#avivid_iframe_handle').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});                      
                             })
@@ -320,11 +405,12 @@ $(function() {
             AviviD.open_status = open_status;
             if (open_status == 0) {
                 result = AviviD.animation_promise('close');
+                AviviD.open_status = result.open_status;
+                result.promise.done( () => {
+                    AviviD.transmit_to_iframe(AviviD.open_status); // set css after animation is finished
+                }); 
             }
-            AviviD.open_status = result.open_status;
-            result.promise.done( () => {
-                AviviD.transmit_to_iframe(AviviD.open_status); // set css after animation is finished
-            });
+            
         });
 
 
@@ -353,83 +439,268 @@ $(function() {
 
         //// clear all scrolling Timeout event to prevent hiding div
         AviviD.clear_all_scroll_timeout = function() {
+            console.log('clear: ' + AviviD.all_timeout_scroll);
             for (i=0; i<AviviD.all_timeout_scroll.length; i++) {
                 clearTimeout(AviviD.all_timeout_scroll[i]);
             }
-            AviviD.all_timeout_scroll = []
+            AviviD.all_timeout_scroll = [];
         }
 
-        
+
+        AviviD.is_in_bottom = function() {
+            return AviviD.scroll_y + AviviD.window_Y >= 0.98*AviviD.scroll_height;
+        }
+
+        // AviviD.set_scrollableX('disable');
         //// listener to show or hide small iframe during scrolling
         var lastScrollTop = 0; //0 means there were never any requests sent
         // var scroll_y = 0;
         //// scrolling listener here
         var scrolled = false;
+        AviviD.y_move = null;
+        AviviD.y_initial = null;
+        AviviD.y_final = null;
         AviviD.scroll_y_down = 0;
         $(window).on(AviviD.event.down_event, function(e1) {
             AviviD.window_Y = window.innerHeight;
-            y_initial = AviviD.get_Pos(e1, platform, 'y'); // get position after touch (bigger if move upward)
-            y_initial = (y_initial>AviviD.window_Y? y_initial-AviviD.window_Y : y_initial);
+            AviviD.y_initial = AviviD.get_Pos(e1, platform, 'y'); // get position after touch (bigger if move upward)
+            // AviviD.y_initial = (AviviD.y_initial>AviviD.window_Y? AviviD.y_initial-AviviD.window_Y : AviviD.y_initial);
             AviviD.scroll_y_down = AviviD.get_scrollbar_position(); // update scrolling position
-
-            console.log(" $(window.parent).on('touchstart'), y_initial: "+y_initial);
+            AviviD.open_status = (typeof(AviviD.open_status)=='undefined'? 0 : AviviD.open_status);
+            console.log(" $(window.parent).on('touchstart'), y_initial: "+AviviD.y_initial+', open_status: '+ AviviD.open_status);
             $(window).on(AviviD.event.move_event, function(e2) {
+            // $(window).on(AviviD.event.move_event+' scroll ', function(e2) {
+  
                 AviviD.scroll_height = document.body.scrollHeight;
                 AviviD.window_Y = window.innerHeight; // update window size of y
                 AviviD.scroll_y = AviviD.get_scrollbar_position(); // update scrolling position
-                y_final = AviviD.get_Pos(e2, platform, 'y'); // (smaller) if move to the top
-                y_move = (y_initial - y_final)/y_initial*AviviD.window_Y;
-                y_move = (AviviD.platform=='ios'? -y_move : y_move); //// To real-time listen, in iphone, direction is oppsite            
-                if (!scrolled && AviviD.open_status == 0 || AviviD.open_status == 4) { // use for control updating frequency                                   
-                    scrolled = true;
-                    var st = parent.window.pageYOffset || parent.document.documentElement.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
+                AviviD.y_final = AviviD.get_Pos(e2, platform, 'y'); // (smaller) if move to the top
+                // AviviD.y_move = (AviviD.y_initial - AviviD.y_final)/AviviD.y_initial*AviviD.window_Y;
+
+                AviviD.y_move = (AviviD.y_initial - AviviD.y_final);
+
+                // y_move = (AviviD.platform=='ios' || AviviD.platform=='ipad'? -y_move : y_move); //// To real-time listen, in iphone, direction is oppsite            
+                if (!scrolled && AviviD.open_status == -1 || AviviD.open_status == 0 || AviviD.open_status == 4) { // use for control updating frequency                                   
+                    // scrolled = true;
+                    // var st = window.pageYOffset || document.documentElement.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
+                    var st = $(document).scrollTop();
                     if (st >= lastScrollTop) { // move down
-                        console.log('scroll down')                       
+                        // AviviD.open_status = 0; // confirm to be 0
+                        console.log('touchmove, scroll_y: '+AviviD.scroll_y+', window_Y: '+AviviD.window_Y+', scroll_height: '+AviviD.scroll_height+', y_move: '+AviviD.y_move+', y_initial: '+AviviD.y_initial+', y_final: '+AviviD.y_final+', open_status: '+AviviD.open_status)                       
                         if (AviviD.scroll_y + AviviD.window_Y >= 0.98*AviviD.scroll_height) { // at the bottom                           
                             AviviD.open_status = 4;
-                        } else {
-                            AviviD.css_close_showdiv();
-                            AviviD.clear_all_scroll_timeout();
-                            //// wait avivid_recommend_setting['second'], and hidden small div
-                            AviviD.timeout_scroll = setTimeout(function() {
-                                if (AviviD.open_status == 0) { // if open, then cancel to hidden div                                   
-                                    if (AviviD.config.model == 'right') {
-                                        $('#avividai_recommend_iframe').animate({'left': '100vw'}, 500);
-                                        $('#avivid_iframe_handle').animate({'left': '100vw'}, 500);
-                                    } else {                                        
-                                        $('#avividai_recommend_iframe').animate({bottom: '-100vh'}, 500);
-                                        $('#avivid_iframe_handle').animate({bottom: '-100vh'}, 500);
-                                        console.log('prepare to hide div!!!!!!!!!111');
-                                    }
-                                }
-                            }, 1000);
-                            AviviD.all_timeout_scroll.push(AviviD.timeout_scroll);
+
+                        } else { 
+                            AviviD.open_status = 0; // confirm to be 0
+                            // not at the bottom and not in scrolling
+                            // AviviD.css_close_showdiv();
+                            // AviviD.open_status = 0;
+                            // // AviviD.clear_all_scroll_timeout();
+                            // AviviD.clear_all_scroll_timeout();
+                            // //// wait avivid_recommend_setting['second'], and hidden small div
+                            // AviviD.timeout_scroll = setTimeout(function() {
+                            //     if (AviviD.open_status == 0) { // if open, then cancel to hidden div                                   
+                            //         if (AviviD.config.model == 'right') {
+                            //             $('#avividai_recommend_iframe').animate({'left': '100vw'}, 500);
+                            //             $('#avivid_iframe_handle').animate({'left': '100vw'}, 500);
+                            //         } else {                                        
+                            //             $('#avividai_recommend_iframe').animate({bottom: '-100vh'}, 500);
+                            //             $('#avivid_iframe_handle').animate({bottom: '-100vh'}, 500);
+                            //             console.log('prepare to hide div!!!!!!!!!111');
+                            //         }
+                            //     }
+                            // }, 1000);
+                            // AviviD.all_timeout_scroll.push(AviviD.timeout_scroll);
+
                         }
-                    } else if (st < lastScrollTop && (st + AviviD.window_Y) < 0.98*AviviD.scroll_height) { // move up and not in the bottom  
-                        console.log('scroll up') 
-                        AviviD.open_status = 0;
-                        AviviD.css_close_hidediv();
+                    } else if (st < lastScrollTop && (st + AviviD.window_Y) < 0.98*AviviD.scroll_height && AviviD.open_status != 4) { // move up and not in the bottom
+
+                        // console.log('scroll up') 
+                        
+                        // // AviviD.clear_all_scroll_timeout();
+                        // AviviD.css_close_hidediv();
+                        // AviviD.open_status = -1;
                     }
                     lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-                    setTimeout(() => { scrolled = false; }, 20); // wait each 20 ms
+                    // setTimeout(() => { scrolled = false; }, 20); // wait each 20 ms
                 }
-                if (st + AviviD.window_Y >= 0.98*AviviD.scroll_height && (AviviD.open_status==0 || AviviD.open_status==4)) { // at the bottom                   
-                    console.log('scrollTop: '+st+' window height: '+ parent.window.innerHeight+' document height: '+parent.document.body.scrollHeight);
-                    AviviD.clear_all_scroll_timeout(); // don't hide div
-                    AviviD.css_close_showdiv();
-                }
+                // if (st + AviviD.window_Y >= 0.98*AviviD.scroll_height && (AviviD.open_status==0 || AviviD.open_status==4)) { // at the bottom                   
+                //     console.log('scrollTop: '+st+' window height: '+ parent.window.innerHeight+' document height: '+parent.document.body.scrollHeight);
+                //     // AviviD.clear_all_scroll_timeout(); // don't hide div
+                //     AviviD.css_close_showdiv();
+                // }
             });
         });
+
+
+        //// check whether in the bottom
+        setInterval( () => {
+            // AviviD.scroll_y = $(document).scrollTop();
+            setTimeout( () => {
+                AviviD.scroll_y = $(document).scrollTop();
+            }, 500);
+
+            // if ($(document).scrollTop() > AviviD.scroll_y && AviviD.open_status != 4) { // scroll down
+            //     AviviD.css_close_showdiv();
+            //     AviviD.open_status = 0;
+            //     console.log('scroll down, show div');
+            // }
+            // else if ($(document).scrollTop() < AviviD.scroll_y && AviviD.open_status != 4) { // scroll up
+            //     AviviD.css_close_hidediv();
+            //     AviviD.open_status = -1;
+            //     console.log('scroll up, hide div');
+            // }
+
+
+            if ($(document).scrollTop()+AviviD.window_Y >= 0.98*AviviD.scroll_height && AviviD.open_status == 4) { // when in the bottom
+                AviviD.css_close_showdiv();
+                // AviviD.open_status == 4
+                console.log('in the bottom, show div');
+            }
+            else if (AviviD.scroll_y == $(document).scrollTop()) { // not in bottom and stop scrolling
+                // clearTimeout(AviviD.timeout_scroll);
+                // AviviD.timeout_scroll = null;
+                // AviviD.timeout_scroll = setTimeout(function() {
+                    bottom = -parseInt($('#avividai_recommend_iframe').css('bottom'))
+                    if (AviviD.open_status == 0 && bottom != AviviD.window_Y) { // if close or already close, then hidden div                                   
+                        if (AviviD.config.model == 'right') {
+                            promise = $.when(
+                                $('#avividai_recommend_iframe').animate({'left': '100vw'}, 500).promise(),
+                                $('#avivid_iframe_handle').animate({'left': '100vw'}, 500).promise()
+                            )                            
+                            .done( () => {
+                                console.log('already hide right div!!!!!!!!!111');
+                                AviviD.open_status = -1;
+                            })
+                        } else {
+                            promise = $.when(                                        
+                                $('#avividai_recommend_iframe').animate({bottom: '-100vh'}, 500).promise(),
+                                $('#avivid_iframe_handle').animate({bottom: '-100vh'}, 500).promise()
+                            )
+                            .done( () => {
+                                console.log('already hide div!!!!!!!!!111');
+                                AviviD.open_status = -1;
+                            })
+                        }
+                    }
+                // }, 1000);
+            }
+            console.log('setInterval, scroll_y: '+ AviviD.scroll_y+'scroll now: '+ $(document).scrollTop()+'open_status: '+AviviD.open_status);
+        }, 2000);
+
+
+
+        setInterval( () => {
+            if (!AviviD.is_in_bottom()) {
+                if ($(document).scrollTop() > AviviD.scroll_y && AviviD.open_status != 4) { // scroll down
+                    AviviD.css_close_showdiv();
+                    AviviD.open_status = 0;
+                    console.log('scroll down, show div');
+                }
+                else if ($(document).scrollTop() < AviviD.scroll_y && AviviD.open_status != 4) { // scroll up
+                    AviviD.css_close_hidediv();
+                    AviviD.open_status = -1;
+                    console.log('scroll up, hide div');
+                }
+            }
+        }, 500)
+
+        // var lastscroll = 0;
+        // var timeout_scroll = null;
+        // $(window).on('scroll', (e) => {
+        //     var scroll_position = $(document).scrollTop();
+        //     console.log('scrolling pos: '+scroll_position+',now pos: '+ $(document).scrollTop()+ ', lastscroll: '+lastscroll);
+
+        //     if (timeout_scroll != null) {
+        //         clearTimeout(timeout_scroll);
+        //     }
+        //     if (scroll_position == $(document).scrollTop()) { // while stopping scrolling
+        //         // console.log('scrolling pos: '+scroll_position+',now pos: '+ $(document).scrollTop()+ ', lastscroll: '+lastscroll);
+        //         //// wait avivid_recommend_setting['second'], and hidden small div
+        //         // if (timeout_scroll != null) {
+        //             timeout_scroll = setTimeout(function() {
+        //                 if (AviviD.open_status == 0) { // if open, then cancel to hidden div                                   
+        //                     if (AviviD.config.model == 'right') {
+        //                         $('#avividai_recommend_iframe').animate({'left': '100vw'}, 500);
+        //                         $('#avivid_iframe_handle').animate({'left': '100vw'}, 500);
+        //                     } else {                                        
+        //                         $('#avividai_recommend_iframe').animate({bottom: '-100vh'}, 500);
+        //                         $('#avivid_iframe_handle').animate({bottom: '-100vh'}, 500);
+        //                         console.log('scrolling => prepare to hide div!!!!!!!!!111');
+        //                     }
+        //                 }
+        //             }, 1000);
+
+        //         // }
+        //         lastscroll = scroll_position;
+        //     }
+        //     else if (scroll_position > lastscroll) { // scroll down
+        //         if (timeout_scroll != null) {
+        //             clearTimeout(timeout_scroll);
+        //         }
+        //         AviviD.css_close_showdiv();
+        //         console.log('new scroll down');
+
+        //     }
+
+        //     else if (scroll_position < lastscroll) { // scroll up
+        //         if (timeout_scroll != null) {
+        //             clearTimeout(timeout_scroll);
+        //         }
+        //         AviviD.css_close_hidediv();
+        //         console.log('new scroll up');
+
+
+        //     }
+        // });
+
+
+
+
+
+
+        //// outside function, use for hide div
+        // setInterval( () => {
+
+        //     if (AviviD.open_status == 0 || lastScrollTop == window.pageYOffset) { // when scroll stop
+        //         AviviD.clear_all_scroll_timeout();
+        //         //// wait avivid_recommend_setting['second'], and hidden small div
+        //         AviviD.timeout_scroll = setTimeout(function() {                    
+        //             if (AviviD.open_status == 0) { // if open, then cancel to hidden div                                   
+        //                 if (AviviD.config.model == 'right') {
+        //                     $('#avividai_recommend_iframe').animate({'left': '100vw'}, 500);
+        //                     $('#avivid_iframe_handle').animate({'left': '100vw'}, 500);
+        //                 } else {                                        
+        //                     $('#avividai_recommend_iframe').animate({bottom: '-100vh'}, 500);
+        //                     $('#avivid_iframe_handle').animate({bottom: '-100vh'}, 500);
+        //                     console.log('prepare to hide div!!!!!!!!!set interval');
+        //                 }
+        //             }
+        //         }, 1000);
+        //         AviviD.all_timeout_scroll.push(AviviD.timeout_scroll);
+        //         console.log('prepare to hide div, lastScrollTop: '+lastScrollTop+', window.pageYOffset: '+window.pageYOffset);
+        //     }
+        // }, 2000);
+
+
+
 
 
         //// mouseup (touchend) event, to control open at the bottom
         $(window).on(AviviD.event.up_event, function(e) {
             let criteria = AviviD.window_Y/10; // at the bottom and move 1/10 => fully open
+            AviviD.scroll_y = $(document).scrollTop();
+            // y_final = AviviD.get_Pos(e, platform, 'y'); // (smaller) if move to the top
+            // y_move = (y_initial - y_final)/y_initial*AviviD.window_Y;
+            // y_move = (AviviD.platform=='ios' || AviviD.platform=='ipad'? -y_move : y_move); //// To real-time listen, in iphone, direction is oppsite
+            // console.log('touchend, scroll_y: '+AviviD.scroll_y+', window_Y: '+AviviD.window_Y+', scroll_height: '+AviviD.scroll_height+', y_move: '+y_move+', y_initial: '+y_initial+', y_final: '+y_final+', open_status: '+AviviD.open_status)                       
+    
             // let iframe_size = AviviD.get_iframe_size();
             // var iframe_top = $('#avividai_recommend_iframe', parent.document).css('top').split('px')[0];
             // console.log(" $(window.parent).on('mouseup touchend'), open_status: "+ open_status+", iframe_top: "+iframe_top);
-            if (AviviD.scroll_y_down + AviviD.window_Y >= 0.98*AviviD.scroll_height && y_move > criteria && AviviD.open_status == 4) { // at the bottom and move_scroll upward => open iframe               
-                // console.log('parent window, success to open: iframe_top: '+iframe_top);
+            // if (AviviD.scroll_y_down + AviviD.window_Y >= 0.98*AviviD.scroll_height && AviviD.y_move > criteria && AviviD.open_status == 4) { // at the bottom and move_scroll upward => open iframe               
+            if (AviviD.scroll_y_down + AviviD.window_Y >= 0.98*AviviD.scroll_height && AviviD.y_move > criteria) { // at the bottom and move_scroll upward => open iframe               
+                console.log('parent window, success to open'); 
                 result = AviviD.animation_promise('open'); // bug only in ios(right: not stop in 1st motion)
                 AviviD.open_status = result.open_status; // immediately update status to prevent trigger scrolling event, open_status=2
                 result.promise.done( () => {
@@ -450,7 +721,7 @@ $(function() {
             // set_parent_scroll(0, top_position) // ios bug here
             AviviD.Pos_move_release = 0;
             AviviD.Pos_click = AviviD.get_Pos(e1);
-            // console.log('mousedown ,open status: '+ AviviD.open_status);
+            console.log('mousedown ,open status: '+ AviviD.open_status+', Pos_click: '+AviviD.Pos_click);
             if(AviviD.model == 'bottom') {
                 $('#avivid_iframe_handle').on(AviviD.event.move_event, function(e2) { // move event listener
                     AviviD.Pos_move_release = AviviD.get_Pos(e2); // update PosY_move_release only when mouse is moving
@@ -459,15 +730,15 @@ $(function() {
 
                     // AviviD.distance_move = (AviviD.Pos_click < 0.8*AviviD.window_Y? AviviD.window_Y-AviviD.Pos_move_release : AviviD.distance_move);
                     console.log('move distance(+up, -down): '+AviviD.distance_move+' Pos_click: '+AviviD.Pos_click+' Pos_move_release: '+AviviD.Pos_move_release+' open_status: '+AviviD.open_status);
-                    if (AviviD.open_status == 0 || AviviD.open_status == 4 && AviviD.platform != 'ios') { // now is close, to open, adjust height along with mousemove
-                        AviviD.set_scrollable('disable', AviviD.scroll_y) // lock parent window scrolling bar to prevent bug
+                    if (AviviD.open_status == 0 || AviviD.open_status == 4 || AviviD.open_status == 5 && AviviD.platform != 'ios') { // now is close, to open, adjust height along with mousemove
+                        AviviD.platform!='ios'?AviviD.set_scrollable('disable', AviviD.scroll_y) : ''; // lock parent window scrolling bar to prevent bug
                         // console.log('distance_move is '+ AviviD.distance_move+', size: '+(-AviviD.window_Y + Math.max(AviviD.distance_move, 50)));
                         min_size = AviviD.window_Y*0.9 - AviviD.Pos_click; // you can drag everywhere and prevent restore to initial size
                         iframe_size = Math.max(AviviD.distance_move, 50);
                         console.log('AviviD.Pos_click: '+AviviD.Pos_click+', min_size: '+min_size+', distance_move is '+ AviviD.distance_move+', size: '+iframe_size);
                         $('#avividai_recommend_iframe').css({bottom: -AviviD.window_Y + iframe_size});
                         $('#avivid_iframe_handle').css({bottom: -AviviD.window_Y + iframe_size});
-                        AviviD.open_status = 4;
+                        AviviD.open_status = 5;
                     }
                 });
             }
@@ -485,4 +756,50 @@ $(function() {
                 AviviD.transmit_to_iframe(AviviD.open_status); // set css after animation is finished
             });
         });
-});
+
+
+
+        //// outside function, use for dynamically adjusting height of item page
+        setInterval( () => {
+            if (AviviD.open_status == 2 || AviviD.open_status == 3) { // when height changed
+                AviviD.transmit_to_iframe(AviviD.open_status); // update window_Y of iframe
+                AviviD.window_Y = window.innerHeight; // update window_Y
+                // let open_item_size = AviviD.platform=='ios'? AviviD.window_Y*0.86:AviviD.window_Y*0.91;
+                let open_iframe_size = AviviD.window_Y*1.05;
+                // $('#avividai_item_iframe').css({height: open_item_size+'px'}); //
+                $('#avividai_recommend_iframe').css({height: open_iframe_size+'px'}); //
+                // console.log('adjust size in parent: '+AviviD.window_Y);
+            }
+        }, 2000);
+
+
+
+        // //// listener to execute back button in iframe       
+        // history.pushState(null, null, '/');
+        // $(window).on('popstate', function(e) {
+        //     console.log('popstate: open_status:'+AviviD.open_status)
+        //     if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
+        //         e.preventDefault();
+        //         console.log('lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
+        //         history.pushState(null, null, '/');
+        //     } else if (AviviD.open_status == 3) { // in item-page, go to last page               
+        //         e.preventDefault();
+        //         console.log('lock back button, in item-page, open_status: '+AviviD.open_status);
+        //         // AviviD.reback();
+        //         // AviviD.open_status = 2;
+        //         // AviviD.transmit_to_parent(AviviD.open_status);
+        //         history.pushState(null, null, '/');
+        //     } else {
+        //         // e.preventDefault();
+        //         console.log('do nothing, back, open_status: '+AviviD.open_status);
+        //         history.go(-2); // go back twice
+        //         // do nothing
+        //     }
+        // });
+
+
+
+// });
+
+
+// },500);
