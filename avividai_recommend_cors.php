@@ -6,9 +6,11 @@ header('Access-Control-Allow-Methods:POST, GET');
 header("Access-Control-Allow-Headers: Origin, Methods, Content-Type");
 header('Access-Control-Allow-Credentials: True');
 
-
-// required
 $web_id         = filter_var($_GET["web_id"], FILTER_SANITIZE_STRING); 
+$title_last_watch     = filter_var($_GET["title_last_watch"], FILTER_SANITIZE_STRING); 
+$title_now_watch      = filter_var($_GET["title_now_watch"], FILTER_SANITIZE_STRING); 
+$title_exclude     = filter_var($_GET["title_exclude"], FILTER_SANITIZE_STRING); 
+// required
 $model          = filter_var($_GET["model"], FILTER_SANITIZE_STRING); //模式 bottom=底部滑上來, right=右邊滑出來
 $title          = filter_var($_GET["title"], FILTER_SANITIZE_STRING);
 $website_type   = filter_var($_GET["website_type"], FILTER_SANITIZE_STRING);
@@ -116,21 +118,21 @@ if($model == 'right')
         <!--推薦內容集合頁-->
         <div class="row" id="avivid_item_div" style="margin:10vh auto; width:100%">
             <div class="col">
-                <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -1.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
+                <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -0.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
                     <div class="row">
-                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 1vw 0 9vw">
+                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 3vw 0 6vw">
                             <b style="font-size: 20px">猜你喜歡</b>
                             <div class="bg-dark" style="height: 10px">&nbsp</div>
                         </div>
 
-                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 4vw 0 6vw">
+                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 6vw 0 3vw">
                             <b class="text-gray" style="font-size: 20px">別人也看了</b>
                             <div class="bg-gray" style="height: 10px">&nbsp</div>
                         </div>
                     </div>
                 </div>
 
-                <div id="avivid_recommend_body_div" class="row" style="overflow-y:scroll; margin-top:0vh; height:82vh;"></div>
+                <div id="avivid_recommend_body_div" class="row" style="overflow-y:scroll; margin-top:-0.5vh; height:82vh; position:fixed; left:2.5vw;"></div>
             </div>
         </div>
     </div>
@@ -139,21 +141,41 @@ if($model == 'right')
 
         var AviviD = (typeof(AviviD) == 'undefined'? {} : AviviD);
 
-        $(function() {
-            AviviD.config = 
-            {
-                "web_id": 'i3fresh', // underwear for e-comm, babyhome for media
-                "title" : 'default',
-                "model": "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
-                "website_type": 3, // 1:media, 2:blog, 3:E-commerce
-                "recommend_type": 1 // 1:article, 2:e-commerce
-            }
+        // $(function() {
+        //     AviviD.config = 
+        //     {
+        //         "web_id": 'i3fresh', // underwear for e-comm, babyhome for media
+        //         "title" : 'default',
+        //         "model": "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
+        //         "website_type": 3, // 1:media, 2:blog, 3:E-commerce
+        //         "recommend_type": 1, // 1:article, 2:e-commerce
+        //         "z_item": 10000
+        //     }
+
+        AviviD.config = 
+        {
+            "web_id": '<?php echo $web_id; ?>', // underwear for e-comm, babyhome for media
+            "title_last_watch" : '<?php echo $title_last_watch; ?>',
+            "title_now_watch"  : '<?php echo $title_now_watch; ?>',
+            "title_exclude"    : '<?php echo $title_exclude; ?>',
+            "model": "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
+            "website_type": 3, // 1:media, 2:blog, 3:E-commerce
+            "recommend_type": 1, // 1:article, 2:e-commerce
+            "z_open": 10000,
+            "z_close": 10,
+            "z_item": 10000
+        }
+
+
+
 
             //// inside function, 
             AviviD.get_item = function(type='guess') {
                 let web_id         = AviviD.config.web_id;
-                let title          = AviviD.config.title; 
-                title = (type=='also'? 'i3Fresh 愛上新鮮 - 總統級超厚霜降牛排21oz': title)
+                let title_last_watch = AviviD.config.title_last_watch; 
+                let title_now_watch = AviviD.config.title_now_watch; 
+
+                title = (type=='guess'? title_last_watch: title_now_watch) // (guess you like, other also watch) = (title_last_watch, title_now_watch)
                 let website_type   = AviviD.config.website_type;
                 let recommend_type = AviviD.config.recommend_type;
                 // let iframe = $('#avividai_recommend_iframe');
@@ -190,7 +212,7 @@ if($model == 'right')
 
                         i++;
                     });
-                    console.log("TONY's API, get items length: "+i);
+                    console.log("TONY's API, get items length: "+i+', title: '+title);
 
                 });
             }
@@ -267,10 +289,11 @@ if($model == 'right')
             }
 
             //// transmit open_status to parent page
-            AviviD.transmit_to_parent = function(open_status=0) {
-                var open_status = open_status;
+            AviviD.transmit_to_parent = function(open_status=0, z_item=0) {
+                // var open_status = open_status;
                 data = {};
                 data.open_status = open_status;
+                data.z_item = z_item;
                 window.parent.postMessage(data, "*"); 
                 // console.log('transmit to parent: data: '+data);
             }
@@ -379,27 +402,29 @@ if($model == 'right')
                     var url   = $(this).attr('data-url');
                     var title = $(this).text().substring(0, 15);
                     let window_y = document.getElementById('parent_window_y').innerHTML;
-                    let open_size = window_y*0.9;
+                    let open_size = window_y*0.91;
                     AviviD.open_status = 3; // in item state
-                    AviviD.transmit_to_parent(AviviD.open_status);
+                    AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_item);
                     console.log('click item, open_status: '+AviviD.open_status);
                     // create iframe linked to clicked item page
                     if (AviviD.platform=='ios') // there are bottom tap in ios
                     {
+                        // $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:80vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
                         $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:80vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
+
                     } else {
                         $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:93vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
                     }
                     // hiden all items div
                     $('#avivid_item_div').animate({top:"100vh"}, 700);
-                    $('#avivid_body_iframe').css({'background-color': 'white'});
+                    // $('#avivid_body_iframe').css({'background-color': 'white'});
                     setTimeout(function() {
-                        $('#avividai_item_iframe').css({height: open_size+'px'}); // 
+                        // $('#avividai_item_iframe').css({height: open_size+'px'}); // 
                         $('#avivid_item_div').hide(); // hidden all items page including header bar
                         $('#avivid_body_iframe').show(); // show iframe of clicked item
                         $('#avivid_reback_btn').css("color", "#ffffff").show();
                         // $('#avivid_body_iframe').css({"margin-topavividai_recommend_iframe":"50px"});
-                        $('#avivid_body_iframe').css({"margin-top":"2.5vh"});
+                        $('#avivid_body_iframe').css({'background-color': 'white', "position":"fixed", "top":"6vh", "left":"0", "width":"100vw"});
                         // $('#recommend_iframe').attr("data-status", "start");
                         $('#avivid_recomm_wrapper').css({"margin-left": ""}); // restore to align page              
                         // $('#recomm_wrapper').css({"margin": "30px 0 0 0"}); // align product page
@@ -452,7 +477,7 @@ if($model == 'right')
         //         }
         //     }, 2000);
 
-        });
+        // });
 
 
 
