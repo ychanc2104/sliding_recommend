@@ -25,7 +25,7 @@ AviviD.config =
     "recommend_type"   : 1, // 1:article, 2:e-commerce, useful only when website_type != 3
     "z_open"           : 10000,
     "z_close"          : 10,
-    "z_item"           : 10000
+    "z_item"           : 10000 // set z-index after get into item url
 }
 
 
@@ -87,24 +87,18 @@ document.querySelector('#avividai_recommend_iframe').setAttribute('src', AviviD.
 
 
 // 5. insert js
-// var AviviD = typeof(AviviD) == 'undefined'? {} : AviviD;
-
 console.log(navigator.userAgent);
-
 AviviD.receiver = document.getElementById('avividai_recommend_iframe').contentWindow;
 AviviD.open_status = -1; // -1: fully close, 0: close but show div, 1: half-open, 2: fully open, 3: in item-page, 4: in the bottom, 5: in moving-open
 
 
-
-// AviviD.title_class = ['default', 'default']; // size of two
-AviviD.transmit_to_iframe = function(open_status=0) {
+AviviD.transmit_to_iframe = function(open_status=-1) {
     let scroll_y = window.pageYOffset;
     let window_x = window.innerWidth;
     let window_y = window.innerHeight;
     let scroll_height = document.body.scrollHeight;
     // let title = AviviD.get_class_title();
     // var open_status = AviviD.open_status;
-
     data = {};
     data.scroll_height = scroll_height;
     data.scroll_y = scroll_y;
@@ -116,23 +110,11 @@ AviviD.transmit_to_iframe = function(open_status=0) {
     // console.log('transmit: top_position: '+scroll_y+', data: '+data);
 }
 
-
+//// 
 $('#avivid_iframe_handle').on('touchstart touchmove touchend', (e) => {
     AviviD.transmit_to_iframe(AviviD.open_status);
 });
 
-
-// AviviD.config = 
-// {
-//     "web_id": 'i3fresh', // underwear for e-comm, babyhome for media
-//     "title" : 'default',
-//     "model": "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
-//     "website_type": 3, // 1:media, 2:blog, 3:E-commerce
-//     "recommend_type": 1, // 1:article, 2:e-commerce
-//     "z_open": 10000,
-//     "z_close": 10,
-//     "z_item": 10000
-// }
 
 AviviD.scroll_y = null;
 AviviD.scroll_height = document.body.scrollHeight;
@@ -172,7 +154,7 @@ AviviD.get_device_type = function() {
 }
 
 AviviD.platform = AviviD.get_device_type();
-console.log('platform: ' + AviviD.platform);
+console.log('platform: ' + AviviD.platform+', open_status: '+AviviD.open_status);
 
 if (AviviD.platform == 'pc') {
     AviviD.event = {
@@ -240,22 +222,7 @@ AviviD.get_scrollbar_position = function() {
     var scroll_y = scroll_y == 0? -window.document.body.style.top.split('px')[0] : scroll_y;
     return scroll_y;
 }
-
-// AviviD.set_scrollable = function(state='enable', scroll_y='') { // disable: close scrolling, enable: open scrolling
-//     if (state == 'disable') {
-//         window.document.body.style.top      = -scroll_y + 'px';
-//         // window.document.body.style.position = "fixed"; // extra required for ios
-//         window.document.body.style.overflow = "hidden"; // close scrolling        
-//     } else if (state == 'enable') {
-//         window.document.body.style.top      = -scroll_y + 'px';
-//         // window.document.body.style.position = ""; // extra required for ios
-//         window.document.body.style.overflow = "auto"; // open scrolling
-//         window.scrollTo(0, scroll_y); // set croll bar to initial position
-//     }
-    
-// }
-
-
+//// disable or enable scrolling bar
 AviviD.set_scrollable = function(state='enable') { // disable: close scrolling, enable: open scrolling
     if (state == 'disable') {
         window.document.body.style.overflow = "hidden"; // close scrolling        
@@ -264,8 +231,7 @@ AviviD.set_scrollable = function(state='enable') { // disable: close scrolling, 
     }    
 }
 
-
-
+//// get iframe size during drag to open
 AviviD.get_iframe_size = function() {
     let model = AviviD.config.model;
     let iframe_size = 0;
@@ -275,7 +241,6 @@ AviviD.get_iframe_size = function() {
     }
     return iframe_size;
 }
-
 
 // main for execute animation
 AviviD.animation_promise = function(motion, in_half_open=true) { // animation + css setting, motion='open', 'close', return promise
@@ -342,8 +307,8 @@ AviviD.animation_promise = function(motion, in_half_open=true) { // animation + 
             promise = $.when(
                 AviviD.platform!='ios'?AviviD.set_scrollable('enable') : '' // confirm to enable scrolling
                 ).done( () => {
-                    // promise = AviviD.animation('close')
                     AviviD.animation('close')
+
                     .done( () => {
                         $('#avividai_recommend_iframe').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
                         $('#avivid_iframe_handle').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});                      
@@ -413,8 +378,8 @@ AviviD.animation = function(motion, in_half_open=true) { // motion: 0 for close,
 //// for receive data from iframe, use for close,
 $(window).on('message', (e_msg) => {
     data = e_msg.originalEvent.data;
-    open_status = data.open_status;
-    z_item = data.z_item;
+    open_status = typeof data.open_status== "undefined" ? AviviD.open_status : data.open_status;
+    z_item = typeof data.z_item == "undefined" ? AviviD.config.z_item : data.z_item;
     console.log('change z-index to '+z_item);
     $('#avividai_recommend_iframe').css({"z-index": z_item});
     AviviD.open_status = open_status;
@@ -425,7 +390,6 @@ $(window).on('message', (e_msg) => {
             AviviD.transmit_to_iframe(AviviD.open_status); // set css after animation is finished
         }); 
     }
-    
 });
 
 
@@ -434,9 +398,13 @@ AviviD.css_close_show_iframe = function() {
     if (AviviD.config.model == 'right') {
         $('#avividai_recommend_iframe').css({display:'block', 'margin-left': '', left: '90vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
         $('#avivid_iframe_handle').css({display:'block', 'margin-left': '', left: '90vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // requ
+        $('#avividai_recommend_iframe').css({"z-index": AviviD.config.z_close});
+
     } else {
         $('#avividai_recommend_iframe').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
         $('#avivid_iframe_handle').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
+        $('#avividai_recommend_iframe').css({"z-index": AviviD.config.z_close});
+
     }
 }
 
@@ -445,9 +413,11 @@ AviviD.css_close_hide_iframe = function() {
     if (AviviD.config.model == 'right') {
         $('#avividai_recommend_iframe').css({display:'block', 'margin-left': '', left: '100vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
         $('#avivid_iframe_handle').css({display:'block', 'margin-left': '', left: '100vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
+        $('#avividai_recommend_iframe').css({"z-index": AviviD.config.z_close});
     } else {
         $('#avividai_recommend_iframe').css({display:'block', top:'', bottom:'-100vh', height: '100vh', width: '100vw', left: 0});
         $('#avivid_iframe_handle').css({display:'block', top:'', bottom:'-100vh', height: '100vh', width: '100vw', left: 0});
+        $('#avividai_recommend_iframe').css({"z-index": AviviD.config.z_close});
     }
 }
 
@@ -531,7 +501,6 @@ setInterval( () => {
     // if ($(document).scrollTop()+AviviD.window_Y >= 0.98*AviviD.scroll_height && AviviD.open_status == 4) { // when in the bottom
     // if (AviviD.is_in_bottom() && AviviD.open_status == 4 ) { // when in the bottom 
     if (AviviD.is_in_bottom()) { // when in the bottom 
-
         if (AviviD.open_status == -1 || AviviD.open_status == 0) {
             AviviD.css_close_show_iframe();
             AviviD.open_status == 4
@@ -668,4 +637,23 @@ setInterval( () => {
 }, 2000);
 
 
-
+// //// listener to execute back button in outside       
+// window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+// $(window).on('popstate', function(e) {
+//     console.log('outside popstate: open_status:'+AviviD.open_status)
+//     if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
+//         e.preventDefault();
+//         console.log('outside lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
+//         window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+//     } else if (AviviD.open_status == 3 || typeof AviviD.open_status == "undefined") { // in item-page, go to last page               
+//         e.preventDefault();
+//         console.log('outside lock back button, in item-page, open_status: '+AviviD.open_status);
+//         AviviD.open_status = 2;
+//         window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+//     } else {
+//         e.preventDefault();
+//         console.log('outside do nothing, back, open_status: '+AviviD.open_status);
+//         history.go(-2); // go back twice
+//         // do nothing
+//     }
+// });

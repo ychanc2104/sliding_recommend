@@ -47,12 +47,9 @@ if($model == 'right')
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>-->
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-
     <style>
-
 
     </style>
 </head>
@@ -154,19 +151,17 @@ if($model == 'right')
 
         AviviD.config = 
         {
-            "web_id": '<?php echo $web_id; ?>', // underwear for e-comm, babyhome for media
+            "web_id"           : '<?php echo $web_id; ?>', // underwear for e-comm, babyhome for media
             "title_last_watch" : '<?php echo $title_last_watch; ?>',
             "title_now_watch"  : '<?php echo $title_now_watch; ?>',
             "title_exclude"    : '<?php echo $title_exclude; ?>',
-            "model": "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
-            "website_type": 3, // 1:media, 2:blog, 3:E-commerce
-            "recommend_type": 1, // 1:article, 2:e-commerce
-            "z_open": 10000,
-            "z_close": 10,
-            "z_item": 10000
+            "model"            : "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
+            "website_type"     : 3, // 1:media, 2:blog, 3:E-commerce
+            "recommend_type"   : 1, // 1:article, 2:e-commerce
+            "z_open"           : 10000,
+            "z_close"          : 10,
+            "z_item"           : 10000
         }
-
-
 
 
             //// inside function, 
@@ -268,11 +263,6 @@ if($model == 'right')
             }
 
 
-
-
-
-
-
             //// fully open state (open_status = 2, right = bottom) 
             AviviD.css_fullyopen = function() {
                 $('.avivid_block_overlay').hide(); //半透明遮罩
@@ -303,11 +293,11 @@ if($model == 'right')
             setTimeout( () => {
                 AviviD.get_item('guess'); //抓猜你喜歡
                 AviviD.css_close_showdiv('bottom');
-
             }, 1000);
 
             // initialize open_status
-            AviviD.open_status = 0; 
+            AviviD.open_status = 0;
+
             //// function to receive parameters from parent window
             $(window).on('message', function (e_msg) {
                 // alert(e_msg.origin);
@@ -315,8 +305,6 @@ if($model == 'right')
                 //     return;
                 // }
                 data = e_msg.originalEvent.data;
-                // console.log(data);
-                // console.log('now open_status: '+data.open_status+', previous open_status: '+AviviD.open_status);
 
                 var scroll_height = data.scroll_height;
                 var scroll_y = data.scroll_y;
@@ -331,7 +319,7 @@ if($model == 'right')
                 document.getElementById('parent_open_status').innerHTML = open_status;
 
                 if (AviviD.open_status != data.open_status) {
-                    if (data.open_status == 0) { // close css                        
+                    if (data.open_status == 0 || data.open_status == -1) { // close css                        
                         AviviD.css_close_showdiv();
                         console.log('close css');
                         
@@ -366,7 +354,7 @@ if($model == 'right')
 
 
             // to close
-            $('#avivid_close_window_btn').on('touchstart', function(e) {
+            $('#avivid_close_window_btn').on('click', function(e) {
                 AviviD.reback();
                 AviviD.css_close_showdiv(AviviD.config.model);
                 AviviD.open_status = 0;
@@ -459,7 +447,7 @@ if($model == 'right')
                     AviviD.transmit_to_parent(AviviD.open_status);
                     window.history.pushState(null, null, null);
                 } else {
-                    // e.preventDefault();
+                    e.preventDefault();
                     console.log('do nothing, back, open_status: '+AviviD.open_status);
                     // history.go(-2); // go back twice
                     // do nothing
