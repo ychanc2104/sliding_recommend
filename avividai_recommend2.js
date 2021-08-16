@@ -39,8 +39,9 @@ AviviD.get_item_title = function() {
 }
 //// save to cookie
 AviviD.save_title_to_cookie = function(title_last_watch="default", title_now_watch="default") {
-    document.cookie = "AviviD_last_watch="+title_last_watch;
-    document.cookie = "AviviD_now_watch="+title_now_watch;
+    
+    document.cookie = "AviviD_last_watch="+encodeURI(title_last_watch); // ios not support for chinese (ASCII), so encode first
+    document.cookie = "AviviD_now_watch="+encodeURI(title_now_watch);
 }
 //// get cookie
 AviviD.get_Cookie = function(cookie_name="AviviD_last_watch") {
@@ -59,10 +60,13 @@ AviviD.get_Cookie = function(cookie_name="AviviD_last_watch") {
     return "404";
 }
 AviviD.update_cookie = function() {
-    var title_last_watch = AviviD.get_Cookie("AviviD_last_watch");
-    var title_now_watch = AviviD.get_Cookie("AviviD_now_watch");
+    var title_last_watch = decodeURI(AviviD.get_Cookie("AviviD_last_watch"));
+    var title_now_watch = decodeURI(AviviD.get_Cookie("AviviD_now_watch"));
     var now_title = AviviD.get_item_title();
-    if (title_last_watch == "404" || title_now_watch == "404" || title_now_watch == "i3Fresh 愛上新鮮") {
+    var encode_title = encodeURI(now_title);
+
+    console.log('title_now_watch: '+title_now_watch+', get title: '+now_title+', encode: '+encode_title+', decoded title: '+decodeURI(encode_title))
+    if (title_last_watch == "404" || title_now_watch == "404" || title_now_watch == "i3Fresh 愛上新鮮" || title_last_watch == "i3Fresh") {
         AviviD.save_title_to_cookie("default", "default");
         title_now_watch = "default";
     }
@@ -79,10 +83,20 @@ AviviD.config.title_now_watch = AviviD.get_Cookie("AviviD_now_watch");
 // 4. insert iframe
 $('body').append('<div id="avivid_iframe_warpper"><div id="avivid_iframe_handle"></div></div>')
 AviviD.iframe_src = `https://www.likr.com.tw/rick/recommend2/avividai_recommend_cors.php`;
-AviviD.iframe_qs = `?web_id=`+AviviD.config.web_id+`&title_last_watch=`+AviviD.config.title_last_watch
-                    +`&title_now_watch=`+AviviD.config.title_now_watch+`&title_exclude=`+AviviD.config.title_exclude;
-AviviD.src = AviviD.iframe_src + AviviD.iframe_qs;
-$('#avivid_iframe_warpper').append(`<iframe id="avividai_recommend_iframe"></iframe>`)
+// AviviD.iframe_qs = `?web_id=`+String(AviviD.config.web_id)+`&title_last_watch=`+String(AviviD.config.title_last_watch)
+//                     +`&title_now_watch=`+String(AviviD.config.title_now_watch)+`&title_exclude=`+AviviD.config.title_exclude;
+// AviviD.src = AviviD.iframe_src + AviviD.iframe_qs;
+// AviviD.iframe_qs = { web_id: AviviD.config.web_id, title_last_watch: AviviD.config.title_last_watch, title_now_watch: AviviD.config.title_now_watch
+//                     ,title_exclude: AviviD.config.title_exclude };
+// $('#avivid_iframe_warpper').append(`<iframe id="avividai_recommend_iframe"></iframe>`)
+// document.querySelector('#avividai_recommend_iframe').setAttribute('src', AviviD.src);
+
+
+AviviD.iframe_qs = { web_id: AviviD.config.web_id, title_last_watch: AviviD.config.title_last_watch, title_now_watch: AviviD.config.title_now_watch
+                    ,title_exclude: AviviD.config.title_exclude };
+AviviD.src = AviviD.iframe_src + `?` + $.param(AviviD.iframe_qs);
+console.log('url query: '+ AviviD.src);
+$('#avivid_iframe_warpper').append(`<iframe id="avividai_recommend_iframe"></iframe>`);
 document.querySelector('#avividai_recommend_iframe').setAttribute('src', AviviD.src);
 
 
@@ -320,6 +334,7 @@ AviviD.animation_promise = function(motion, in_half_open=true) { // animation + 
     }
     result.open_status = open_status;
     result.promise = promise;
+    console.log('animation_promise, open_status: '+open_status);
     return result;
 }
 
@@ -531,7 +546,7 @@ setInterval( () => {
             }
         }
     }
-    console.log('setInterval, scroll_y: '+ AviviD.scroll_y+'scroll now: '+ $(document).scrollTop()+'open_status: '+AviviD.open_status);
+    // console.log('setInterval, scroll_y: '+ AviviD.scroll_y+'scroll now: '+ $(document).scrollTop()+'open_status: '+AviviD.open_status);
 }, 2000);
 
 
@@ -637,23 +652,23 @@ setInterval( () => {
 }, 2000);
 
 
-// //// listener to execute back button in outside       
-// window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-// $(window).on('popstate', function(e) {
-//     console.log('outside popstate: open_status:'+AviviD.open_status)
-//     if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
-//         e.preventDefault();
-//         console.log('outside lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
-//         window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-//     } else if (AviviD.open_status == 3 || typeof AviviD.open_status == "undefined") { // in item-page, go to last page               
-//         e.preventDefault();
-//         console.log('outside lock back button, in item-page, open_status: '+AviviD.open_status);
-//         AviviD.open_status = 2;
-//         window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-//     } else {
-//         e.preventDefault();
-//         console.log('outside do nothing, back, open_status: '+AviviD.open_status);
-//         history.go(-2); // go back twice
-//         // do nothing
-//     }
-// });
+//// listener to execute back button in outside       
+window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+$(window).on('popstate', function(e) {
+    console.log('outside popstate: open_status:'+AviviD.open_status)
+    if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
+        e.preventDefault();
+        console.log('outside lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
+        window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+    } else if (AviviD.open_status == 3 || typeof AviviD.open_status == "undefined") { // in item-page, go to last page               
+        e.preventDefault();
+        console.log('outside lock back button, in item-page, open_status: '+AviviD.open_status);
+        AviviD.open_status = 2;
+        window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
+    } else {
+        e.preventDefault();
+        console.log('outside do nothing, back, open_status: '+AviviD.open_status);
+        history.go(-2); // go back twice
+        // do nothing
+    }
+});

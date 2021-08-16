@@ -152,8 +152,8 @@ if($model == 'right')
         AviviD.config = 
         {
             "web_id"           : '<?php echo $web_id; ?>', // underwear for e-comm, babyhome for media
-            "title_last_watch" : '<?php echo $title_last_watch; ?>',
-            "title_now_watch"  : '<?php echo $title_now_watch; ?>',
+            "title_last_watch" : decodeURI('<?php echo $title_last_watch; ?>'),
+            "title_now_watch"  : decodeURI('<?php echo $title_now_watch; ?>'),
             "title_exclude"    : '<?php echo $title_exclude; ?>',
             "model"            : "bottom", //模式 bottom=底部集合頁, right=右邊集合頁
             "website_type"     : 3, // 1:media, 2:blog, 3:E-commerce
@@ -324,9 +324,10 @@ if($model == 'right')
                         console.log('close css');
                         
                     } else if (data.open_status == 2) { // fully open css
+                        AviviD.reback();
                         AviviD.css_fullyopen();
                         console.log('fully open css');
-                    }
+                    } 
                 }
                 AviviD.open_status = data.open_status; // update open_status
 
@@ -431,28 +432,28 @@ if($model == 'right')
 
 
 
-            //// listener to execute back button in iframe       
-            window.history.pushState(null, null, null);
-            $(window).on('popstate', function(e) {
-                console.log('popstate: open_status:'+AviviD.open_status)
-                if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
-                    e.preventDefault();
-                    console.log('lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
-                    window.history.pushState(null, null, null);
-                } else if (AviviD.open_status == 3) { // in item-page, go to last page               
-                    e.preventDefault();
-                    console.log('lock back button, in item-page, open_status: '+AviviD.open_status);
-                    AviviD.reback();
-                    AviviD.open_status = 2;
-                    AviviD.transmit_to_parent(AviviD.open_status);
-                    window.history.pushState(null, null, null);
-                } else {
-                    e.preventDefault();
-                    console.log('do nothing, back, open_status: '+AviviD.open_status);
-                    // history.go(-2); // go back twice
-                    // do nothing
-                }
-            });
+            // //// listener to execute back button in iframe       
+            // window.history.pushState(null, null, null);
+            // $(window).on('popstate', function(e) {
+            //     console.log('popstate: open_status:'+AviviD.open_status)
+            //     if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
+            //         e.preventDefault();
+            //         console.log('lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
+            //         window.history.pushState(null, null, null);
+            //     } else if (AviviD.open_status == 3) { // in item-page, go to last page               
+            //         e.preventDefault();
+            //         console.log('lock back button, in item-page, open_status: '+AviviD.open_status);
+            //         AviviD.reback();
+            //         AviviD.open_status = 2;
+            //         AviviD.transmit_to_parent(AviviD.open_status);
+            //         window.history.pushState(null, null, null);
+            //     } else {
+            //         e.preventDefault();
+            //         console.log('do nothing, back, open_status: '+AviviD.open_status);
+            //         // history.go(-2); // go back twice
+            //         // do nothing
+            //     }
+            // });
 
 
 
