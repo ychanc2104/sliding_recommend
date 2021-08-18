@@ -143,6 +143,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             let id_wrapper = (type=='guess'? '#guess_wrapper': '#also_wrapper')
             let website_type   = AviviD.config.website_type;
             let recommend_type = AviviD.config.recommend_type;
+            // let iframe = $('#avividai_recommend_iframe');
             // console.log(type + ', web_id is '+web_id+', website_type: '+website_type+', title: '+title);
             $.getJSON(AviviD.get_api_route(website_type, recommend_type, web_id, title, type), function(callback) {
                 if(callback == 'error') {
@@ -163,7 +164,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                             <div class="col-6 `+div_class+`">
                                 <a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
                                 <h6 class="title"><a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn">`+value['title']+`</a></h6>
-                                <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn">`+value['description'].substring(0,32)+`....</a></div>
+                                <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn">`+value['description']+`</a></div>
                             </div>`;
                     $(id_wrapper).append(html);
                     i++;
@@ -199,17 +200,20 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
 
         //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
         AviviD.css_close_showdiv = function(model='bottom') {
+            // let iframe = $('#avividai_recommend_iframe');
             $('.avivid_block_overlay').show();
             $('#avivid_row_header').hide();
             $('.avivid_init_').hide(); // show header title bar
             if (model == 'right') {
                 $('#avivid_item_div').css({'margin-top': '10vh'});
+                // iframe.css({display:'block', 'margin-left': '', left: '90vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw'}); // required
                 $('#avivid_right_arrow_btn').css({display: 'block', top: '25vh'});
                 $('#avivid_left_arrow_btn').css({display: 'block', top: '25vh'});
                 $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
                 $('.avivid_block_overlay').css({"margin-left": "-1vmax"}); // align product page
             } else {
                 $('#avivid_item_div').css({'margin-top': '2vh'});
+                // iframe.css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw'});
                 $('#avivid_right_arrow_btn').css({display: 'none'});
                 $('#avivid_left_arrow_btn').css({display: 'none'});
                 $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
@@ -222,6 +226,8 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             $('.avivid_block_overlay').hide(); //半透明遮罩
             $('#avivid_row_header').show(); // hide gray transparent bar
             $('.avivid_init_').show(); // show header title bar
+            // let open_size = parent.window.innerHeight*1.05;
+            // $('#avividai_recommend_iframe', parent.document).css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw'}); // required
             $('#avivid_item_div').css({'margin-top': '10vh'}); // items images
             $('#avivid_right_arrow_btn').css({display: 'none'});
             $('#avivid_left_arrow_btn').css({display: 'none'});
