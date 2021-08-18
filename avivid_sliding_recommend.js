@@ -32,7 +32,6 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     'web_id': AviviD.web_id
                 },
                 success: function (result) {
-                    // console.log('data: '+result)
                     resolve(result)
                 },
                 fail: function (xhr, ajaxOptions, thrownError) {

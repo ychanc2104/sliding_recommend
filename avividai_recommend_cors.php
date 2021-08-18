@@ -23,33 +23,108 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
     <title>推薦版位</title>
-    <!-- <link href="avividai_recommend.css" rel="stylesheet" /> -->
-    <link href="https://rhea-cache.advividnetwork.com/sliding_recommend/avivid_sliding_recommend.css" rel="stylesheet" />
+    <!-- <link href="https://rhea-cache.advividnetwork.com/sliding_recommend/avivid_sliding_recommend.css" rel="stylesheet" /> -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
+    <!-- use style instead of .css to accelerate loading-->
     <style>
+    body
+    {
+        -webkit-font-smoothing: antialiased;
 
+        font-family: open sans,sans-serif,microsoft jhenghei,微軟正黑體!important;
+        font-weight: 300;
+        text-transform: none;
+        word-wrap: break-word;
+        word-break: break-all;
+    }
+    #guess_wrapper, #also_wrapper {
+        width: 100vw;
+        height: 83vh;
+        position: fixed;
+        left: 2.5vw;
+        overflow-y: auto;
+        background-color: white;
+    }
+
+    /* outside */
+    #avivid_iframe_handle
+    {
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        bottom: -100vh;
+        left:0;
+        z-index: 60;
+        background-color: rgb(0, 0, 0);
+        opacity: 0.15;
+    }
+
+    .bg-gray
+    {
+        background-color: #bdbdbd;
+    }
+
+    .text-gray
+    {
+        color: #bdbdbd;
+    }
+
+    .title
+    {
+        margin-top: 10px;
+    }
+
+    .title a
+    {
+        color: #000000;
+        font-size:16px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .description
+    {
+        color: #5e5e5e;
+        font-size: 10px; 
+        height: 38px;
+        max-height: 38px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    .description a
+    {
+        color: #5e5e5e;
+        text-decoration: none;
+    }
+
+
+    #avivid_recommend_body_div
+    {
+        background-color: white;
+        width: 100vw;
+    }
+
+    .avivid_init_ {
+        display:none;
+    }
     </style>
 </head>
 
 <body style="background-color: transparent; overflow: hidden;">
     <img src="img/left_close_arrow2.png" id="avivid_left_arrow_btn" style="width:35px; height:35px; position: absolute; top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
     <img src="img/right_close_arrow2.png" id="avivid_right_arrow_btn" style="width:35px; height:35px; position: absolute; right: 0;top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
-
-
     <div class="parameters_wrapper" style="display: none;">
         <div id="parent_scroll_height"></div>
         <div id="parent_scroll_y"></div>
         <div id="parent_window_x"></div>
         <div id="parent_window_y"></div>
         <div id="parent_open_status"></div>
-
     </div>
 
-
     <div class="avivid_block_overlay" style="z-index: 1000; border: none; margin: 0px; padding: 0px; width: 100%; height: 100%; top: 0px; left: 0px; background-color: rgb(0, 0, 0); opacity: 0.15; cursor: wait; position: fixed;"></div>
-
 
     <div id="avivid_recomm_wrapper" class="container" style="max-width: 100%; margin-left: -1vmax;">
         <!--浮動標題列 rgba(116,116,116,0.5)-->
@@ -76,22 +151,15 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             <div class="col" style="height: 27px">&nbsp</div>
         </div>
 
-
         <!--推薦內容顯示-->
         <div class="row avivid_init_">
             <div class="col" style="padding:0; margin:0">
                 <div id="avivid_body_iframe"></div>
-
-                <!-- 滑不完推薦內容 -->
-                <!-- <div id="avividai_recommend_iframe">
-                    <img src="img/right_close_arrow.png?202106041" id="avivid_right_arrow_btn" style="width:19px; height:36px; position: absolute; top: 50%; bottom: 50%; left:-31px; z-index: 100">
-                    <div class="row" style="padding: 10px 10px 0 0; background-color: rgb(0, 0, 0); opacity: 0.6; height: 525px"></div>
-                </div> -->
             </div>
         </div>
 
         <!--推薦內容集合頁-->
-        <div class="row" id="avivid_item_div" style="margin:10vh auto; width:100%">
+        <div class="row" id="avivid_item_div">
             <div class="col">
                 <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -0.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
                     <div class="row">
@@ -107,11 +175,11 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                     </div>
                 </div>
 
-                <div id="avivid_recommend_body_div" class="row">
-                    <div id="guess_wrapper" class="row"></div>
-                    <div id="also_wrapper" class="row" style="display: none"></div>
+                <!-- <div id="avivid_recommend_body_div" class="row"> -->
+                <div id="guess_wrapper" class="row"></div>
+                <div id="also_wrapper" class="row" style="display: none"></div>
             
-                </div>
+                <!-- </div> -->
             </div>
         </div>
     </div>
@@ -171,7 +239,6 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                 console.log("TONY's API, get items length: "+i+', title: '+title);
             });
         }
-
         //// use for merge ad and article (random sorting)
         AviviD.merge_article_ad = function(article_ad) {
             let article = article_ad['article'];
@@ -226,31 +293,22 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             $('#avivid_right_arrow_btn').css({display: 'none'});
             $('#avivid_left_arrow_btn').css({display: 'none'});
             $('#avivid_recommend_body_div').css({'overflow-y': 'auto'}) // close iframe scrolling
-            // console.log('css_fullyopen');
-            // set_parent_scroll(0);
-        }
 
+        }
         //// transmit open_status to parent page
         AviviD.transmit_to_parent = function(open_status=0, z_item=0) {
-            // var open_status = open_status;
             data = {};
             data.open_status = open_status;
             data.z_item = z_item;
             window.parent.postMessage(data, "*"); 
             // console.log('transmit to parent: data: '+data);
         }
-
-
         //// default setting, wait for .php to read parameters
         AviviD.show_item('guess');
         AviviD.show_item('also');
-
         AviviD.css_close_showdiv('bottom');
-
-
         // initialize open_status
         AviviD.open_status = -1;
-
         //// function to receive parameters from parent window
         $(window).on('message', function (e_msg) {
             data = e_msg.originalEvent.data;
@@ -266,7 +324,6 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             document.getElementById('parent_window_x').innerHTML = window_x;
             document.getElementById('parent_window_y').innerHTML = window_y;
             document.getElementById('parent_open_status').innerHTML = open_status;
-
             if (AviviD.open_status != data.open_status) {
                 if (data.open_status == 0 || data.open_status == -1) { // close css                        
                     AviviD.css_close_showdiv();                    
@@ -276,11 +333,9 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                 } 
             }
             AviviD.open_status = data.open_status; // update open_status
-
         });
 
         AviviD.window_Y = document.getElementById('parent_window_y').innerHTML; // update parameter
-
 
         //// back to all items page(猜你喜歡 & 別人也看了), cand confrim to fully open
         AviviD.reback = function() {
@@ -295,8 +350,6 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             $('#avivid_item_div').css("height", "100vh");
             AviviD.css_fullyopen();
         }
-
-
         // to close
         $('#avivid_close_window_btn').on('click', function(e) {
             AviviD.reback();
@@ -304,19 +357,16 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             AviviD.open_status = 0;
             AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_close); // transmit open_status = 0 to parent
         });
-
-
-        //選項卡
+        // change menu (guess <-> also)
         $('.avivid_menu_header_btn').on('click', function() {
+            console.log('change menu');
             if (AviviD.open_status == 2) {
                 $('.avivid_menu_header_btn').find(' > div').removeClass('bg-dark');
                 $('.avivid_menu_header_btn').find(' > div').addClass('bg-gray');
                 $('.avivid_menu_header_btn').find(' > b').addClass('text-gray');
-
                 $(this).find(' > div').removeClass('bg-gray');
                 $(this).find(' > div').addClass('bg-dark');
                 $(this).find(' > b').removeClass('text-gray');
-
                 if($(this).find(' > b').text() == "猜你喜歡") {
                     $('#guess_wrapper').show();
                     $('#also_wrapper').hide();
@@ -339,64 +389,25 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                 let open_size = window_y*0.91;
                 AviviD.open_status = 3; // in item state
                 AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_item);
-                // console.log('click item, open_status: '+AviviD.open_status);
                 // create iframe linked to clicked item page
                 if (AviviD.platform=='ios') { // there are bottom tap in ios               
                     $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:80vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
                 } else {
                     $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:93vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
                 }
-                // hiden all items div
-                // $('#avivid_item_div').animate({top:"100vh"}, 700);
-                // setTimeout(function() {
-                //     $('#avivid_item_div').hide(); // hidden all items page including header bar
-                //     $('#avivid_body_iframe').show(); // show iframe of clicked item
-                //     $('#avivid_reback_btn').css("color", "#ffffff").show();
-                //     $('#avivid_body_iframe').css({'background-color': 'white', "position":"fixed", "top":"6vh", "left":"0", "width":"100vw"});
-                //     $('#avivid_recomm_wrapper').css({"margin-left": ""}); // restore to align page              
-                // }, 500);
-                console.log('directly hide')
                 $('#avivid_item_div').hide(); // hidden all items page including header bar
                 $('#avivid_body_iframe').show(); // show iframe of clicked item
                 $('#avivid_reback_btn').css("color", "#ffffff").show();
                 $('#avivid_body_iframe').css({'background-color': 'white', "position":"fixed", "top":"6vh", "left":"0", "width":"100vw"});
                 $('#avivid_recomm_wrapper').css({"margin-left": ""}); // restore to align page 
-
-
-
             }
         });
-
-
         //// 回上一頁
         $('#avivid_reback_btn').on("click", function(e) {
             AviviD.reback();
             AviviD.open_status = 2;
             AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_open);
         });
-
-
-
-
-
-        //     //// inside function, use for dynamically adjusting height of item page
-        //     setInterval( () => {
-        //         if (AviviD.open_status == 2 || AviviD.open_status == 3) { // when height changed
-        //             AviviD.window_Y = document.getElementById('parent_window_y').innerHTML; // update window_Y
-        //             let open_item_size = AviviD.platform=='ios'? AviviD.window_Y*0.86:AviviD.window_Y*0.91;
-        //             $('#avividai_item_iframe').css({height: open_item_size+'px'}); //
-        //         }
-        //     }, 2000);
-
-        // });
-
-
-
-
-
-
-        
-
 
     </script>
 </body>
