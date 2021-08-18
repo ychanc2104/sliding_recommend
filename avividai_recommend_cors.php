@@ -60,16 +60,31 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         background-color: rgb(0, 0, 0);
         opacity: 0.15;
     }
-
-    .bg-gray
-    {
+    .guess-sep {
+        background-color: #000000;
+    }
+    .guess-text {
+        color: #000000;
+        cursor: pointer;
+        user-select: none; /* supported by Chrome and Opera */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+    }
+    .also-sep {
         background-color: #bdbdbd;
     }
-
-    .text-gray
-    {
+    .also-text {
         color: #bdbdbd;
+        cursor: pointer;
+        user-select: none; /* supported by Chrome and Opera */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
     }
+
 
     .title
     {
@@ -163,14 +178,14 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             <div class="col">
                 <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -0.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
                     <div class="row">
-                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 3vw 0 6vw">
-                            <b style="font-size: 20px">猜你喜歡</b>
-                            <div class="bg-dark" style="height: 10px">&nbsp</div>
+                        <div id="guess_selector" class="col-6 text-center avivid_menu_header_btn" style="padding: 0 3vw 0 6vw">
+                            <div class="guess-text" style="font-size: 20px">猜你喜歡</div>
+                            <div class="guess-sep" style="height: 10px">&nbsp</div>
                         </div>
 
-                        <div class="col-6 text-center avivid_menu_header_btn" style="padding: 0 6vw 0 3vw">
-                            <b class="text-gray" style="font-size: 20px">別人也看了</b>
-                            <div class="bg-gray" style="height: 10px">&nbsp</div>
+                        <div id="also_selector" class="col-6 text-center avivid_menu_header_btn" style="padding: 0 6vw 0 3vw">
+                            <div class="also-text" style="font-size: 20px">別人也看了</div>
+                            <div class="also-sep" style="height: 10px">&nbsp</div>
                         </div>
                     </div>
                 </div>
@@ -187,6 +202,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
     <script type="text/javascript">
 
         var AviviD = (typeof(AviviD) == 'undefined'? {} : AviviD);
+
         AviviD.config = 
         {
             "web_id"           : '<?php echo $web_id; ?>', // underwear for e-comm, babyhome for media
@@ -200,6 +216,71 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             "z_close"          : '<?php echo $z_close; ?>',
             "z_item"           : '<?php echo $z_item; ?>'
         }
+        AviviD.get_device_type = function() {
+        var useragent = navigator.userAgent;
+        useragent = useragent.toLowerCase();
+        // if (useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1) {
+        if (useragent.indexOf('iphone') != -1 ) {
+            platform = 'ios';
+        } 
+        else if (useragent.indexOf('ipad') != -1 ) {
+            platform = 'ipad';
+        } 
+        else if (useragent.indexOf('android') != -1 ) {
+            platform = 'android';
+        } else {
+            platform = 'pc';
+        }
+        return platform
+        }
+        AviviD.platform = AviviD.get_device_type();
+
+        if (AviviD.platform == 'pc') {
+            AviviD.event = {
+                'down_event' : 'mousedown',
+                'move_event'  : 'mousemove',
+                'up_event'  : 'mouseup'
+            }
+        } else { // mobile device use touch events
+            AviviD.event = {
+                'down_event' : 'touchstart',
+                'move_event'  : 'touchmove',
+                'up_event'  : 'touchend'
+            }
+        }
+
+        //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
+        AviviD.css_close_showdiv = function(model='bottom') {
+            $('.avivid_block_overlay').show();
+            $('#avivid_row_header').hide();
+            $('.avivid_init_').hide(); // show header title bar
+            if (model == 'right') {
+                $('#avivid_item_div').css({'margin-top': '10vh'});
+                $('#avivid_right_arrow_btn').css({display: 'block', top: '25vh'});
+                $('#avivid_left_arrow_btn').css({display: 'block', top: '25vh'});
+                $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+                $('.avivid_block_overlay').css({"margin-left": "-1vmax"}); // align product page
+            } else {
+                $('#avivid_item_div').css({'margin-top': '2vh'});
+                $('#avivid_right_arrow_btn').css({display: 'none'});
+                $('#avivid_left_arrow_btn').css({display: 'none'});
+                $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+            }
+            $('#avivid_reback_btn').hide();
+        }
+
+        //// fully open state (open_status = 2, right = bottom) 
+        AviviD.css_fullyopen = function() {
+            $('.avivid_block_overlay').hide(); //半透明遮罩
+            $('#avivid_row_header').show(); // hide gray transparent bar
+            $('.avivid_init_').show(); // show header title bar
+            $('#avivid_item_div').css({'margin-top': '10vh'}); // items images
+            $('#avivid_right_arrow_btn').css({display: 'none'});
+            $('#avivid_left_arrow_btn').css({display: 'none'});
+            $('#avivid_recommend_body_div').css({'overflow-y': 'auto'}) // close iframe scrolling
+        }
+        // initialize open_status
+        AviviD.open_status = -1;
 
         //// inside function, 
         AviviD.show_item = function(type='guess') {
@@ -263,40 +344,8 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             }
             return route
         }
-
-        //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
-        AviviD.css_close_showdiv = function(model='bottom') {
-            $('.avivid_block_overlay').show();
-            $('#avivid_row_header').hide();
-            $('.avivid_init_').hide(); // show header title bar
-            if (model == 'right') {
-                $('#avivid_item_div').css({'margin-top': '10vh'});
-                $('#avivid_right_arrow_btn').css({display: 'block', top: '25vh'});
-                $('#avivid_left_arrow_btn').css({display: 'block', top: '25vh'});
-                $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
-                $('.avivid_block_overlay').css({"margin-left": "-1vmax"}); // align product page
-            } else {
-                $('#avivid_item_div').css({'margin-top': '2vh'});
-                $('#avivid_right_arrow_btn').css({display: 'none'});
-                $('#avivid_left_arrow_btn').css({display: 'none'});
-                $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
-            }
-            $('#avivid_reback_btn').hide();
-        }
-
-        //// fully open state (open_status = 2, right = bottom) 
-        AviviD.css_fullyopen = function() {
-            $('.avivid_block_overlay').hide(); //半透明遮罩
-            $('#avivid_row_header').show(); // hide gray transparent bar
-            $('.avivid_init_').show(); // show header title bar
-            $('#avivid_item_div').css({'margin-top': '10vh'}); // items images
-            $('#avivid_right_arrow_btn').css({display: 'none'});
-            $('#avivid_left_arrow_btn').css({display: 'none'});
-            $('#avivid_recommend_body_div').css({'overflow-y': 'auto'}) // close iframe scrolling
-
-        }
         //// transmit open_status to parent page
-        AviviD.transmit_to_parent = function(open_status=0, z_item=0) {
+        AviviD.transmit_to_parent = function(open_status=0, z_item=0, rescue=true) {
             data = {};
             data.open_status = open_status;
             data.z_item = z_item;
@@ -307,8 +356,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         AviviD.show_item('guess');
         AviviD.show_item('also');
         AviviD.css_close_showdiv('bottom');
-        // initialize open_status
-        AviviD.open_status = -1;
+
         //// function to receive parameters from parent window
         $(window).on('message', function (e_msg) {
             data = e_msg.originalEvent.data;
@@ -318,7 +366,6 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             var window_x = data.window_x;
             var window_y = data.window_y;
             var open_status = data.open_status;
-
             document.getElementById('parent_scroll_height').innerHTML = scroll_height;
             document.getElementById('parent_scroll_y').innerHTML = scroll_y;
             document.getElementById('parent_window_x').innerHTML = window_x;
@@ -357,27 +404,24 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             AviviD.open_status = 0;
             AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_close); // transmit open_status = 0 to parent
         });
-        // change menu (guess <-> also)
-        $('.avivid_menu_header_btn').on('click', function() {
-            console.log('change menu');
-            if (AviviD.open_status == 2) {
-                $('.avivid_menu_header_btn').find(' > div').removeClass('bg-dark');
-                $('.avivid_menu_header_btn').find(' > div').addClass('bg-gray');
-                $('.avivid_menu_header_btn').find(' > b').addClass('text-gray');
-                $(this).find(' > div').removeClass('bg-gray');
-                $(this).find(' > div').addClass('bg-dark');
-                $(this).find(' > b').removeClass('text-gray');
-                if($(this).find(' > b').text() == "猜你喜歡") {
-                    $('#guess_wrapper').show();
-                    $('#also_wrapper').hide();
-                    return false;
-                }
-                if($(this).find(' > b').text() == "別人也看了") {
-                    $('#guess_wrapper').hide();
-                    $('#also_wrapper').show();
-                    return false;
-                }
-            }
+        //// switch to "guess you like"
+        $('#guess_selector').on(AviviD.event.down_event, function() {
+            // console.log(AviviD.event);
+            $('.guess-sep').css({'background-color': '#000000'})
+            $('.guess-text').css({'color': '#000000'})
+            $('.also-sep').css({'background-color': '#bdbdbd'})
+            $('.also-text').css({'color': '#bdbdbd'})
+            $('#guess_wrapper').show();
+            $('#also_wrapper').hide();
+        });
+        //// switch to "other also watch"
+        $('#also_selector').on(AviviD.event.down_event, function() {
+            $('.guess-sep').css({'background-color': '#bdbdbd'})
+            $('.guess-text').css({'color': '#bdbdbd'})
+            $('.also-sep').css({'background-color': '#000000'})
+            $('.also-text').css({'color': '#000000'})
+            $('#guess_wrapper').hide();
+            $('#also_wrapper').show();
         });
 
         // 超連結內容, to open item url
@@ -403,7 +447,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             }
         });
         //// 回上一頁
-        $('#avivid_reback_btn').on("click", function(e) {
+        $('#avivid_reback_btn').on(AviviD.event.down_event, function(e) {
             AviviD.reback();
             AviviD.open_status = 2;
             AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_open);

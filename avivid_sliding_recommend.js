@@ -342,10 +342,11 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     $('#avividai_recommend_iframe').css({"z-index": AviviD.config.z_close});
                     $('#avivid_iframe_handle').css({"z-index": parseInt(AviviD.config.z_close)+1});
                 }); 
-            }
+            }            
             else if (open_status == 3) {
                 $('#avividai_recommend_iframe').css({"z-index": z_item});
             }
+
         });
         //// show samll div to toggle, open_status=0, scroll up (two version, right and bottom)
         AviviD.css_close_show_iframe = function() {
@@ -369,7 +370,8 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
         }
         //// fully open css
         AviviD.css_open_iframe = function() {
-            var open_size = parent.window.outerHeight;
+            AviviD.window_Y = window.outerHeight;
+            var open_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.03 : AviviD.window_Y*1.05);
             $('#avivid_iframe_handle').css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw', "z-index": parseInt(AviviD.config.z_open)+1});
             $('#avivid_iframe_handle').css({display:'none'});
             $('#avividai_recommend_iframe').css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw', "z-index": AviviD.config.z_open}); // required
@@ -383,7 +385,6 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
         $(window).on(AviviD.event.down_event, function(e1) {
             AviviD.window_Y = window.outerHeight;
             AviviD.y_initial = AviviD.get_Pos(e1, platform, 'y'); // get position after touch (bigger if move upward)
-            // AviviD.y_initial = (AviviD.y_initial>AviviD.window_Y? AviviD.y_initial-AviviD.window_Y : AviviD.y_initial);
             AviviD.scroll_y_down = AviviD.get_scrollbar_position(); // update scrolling position
             AviviD.open_status = (typeof(AviviD.open_status)=='undefined'? 0 : AviviD.open_status);
             AviviD.y_move = 0; // initialize to prevent click in bottom to open
@@ -447,7 +448,12 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     AviviD.css_close_hide_iframe();
                     AviviD.open_status = -1;
                     // console.log('scroll up, hide div');
+                } else {
+                    AviviD.transmit_to_iframe(AviviD.open_status); // confirm status
                 }
+            }
+            else {
+                AviviD.transmit_to_iframe(AviviD.open_status); // confirm status
             }
         }, 500)
         //// mouseup (touchend) event, to control open at the bottom
@@ -505,31 +511,34 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
         });
         //// outside function, use for dynamically adjusting height of item page
         setInterval( () => {
-            if (AviviD.open_status == 2 || AviviD.open_status == 3) { // when height changed
+            var window_Y_new = AviviD.platform=='ios'? window.innerHeight : window.outerHeight; // update window_Y
+            if ((AviviD.open_status == 2 || AviviD.open_status == 3) && AviviD.window_Y != window_Y_new) { // when height changed
+                console.log('window size in parent7: '+AviviD.window_Y+', window_Y_new: '+window_Y_new);
                 AviviD.transmit_to_iframe(AviviD.open_status); // update window_Y of iframe
                 AviviD.window_Y = AviviD.platform=='ios'? window.innerHeight : window.outerHeight; // update window_Y
-                let open_iframe_size = AviviD.platform=='ios'?AviviD.window_Y*1.03:AviviD.window_Y*1.03;
+                let open_iframe_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.03 : AviviD.window_Y*1.05);
                 // let open_iframe_size = AviviD.window_Y*1.03;
                 $('#avividai_recommend_iframe').css({height: open_iframe_size+'px'}); //
-                console.log('window size in parent3: '+AviviD.window_Y+', adjust size to: '+open_iframe_size);
+                // console.log('window size in parent5: '+AviviD.window_Y+', window_Y_new: '+window_Y_new+', adjust size to: '+open_iframe_size);
             }
         }, 2000);
         //// listener to execute back button in outside       
         window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
-        $(window).on('popstate', function(e) {
+        window.addEventListener('popstate', function(e) {
             // console.log('outside popstate: open_status:'+AviviD.open_status)
             if (AviviD.open_status == 1 || AviviD.open_status == 2) { // in main iframe page               
                 e.preventDefault();
-                // console.log('outside lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
+                console.log('outside lock back button, half-open or fully-open, open_status: '+AviviD.open_status);
                 window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
             } else if (AviviD.open_status == 3 || typeof AviviD.open_status == "undefined") { // in item-page, go to last page               
                 e.preventDefault();
-                // console.log('outside lock back button, in item-page, open_status: '+AviviD.open_status);
+                console.log('outside lock back button, in item-page, open_status: '+AviviD.open_status);
                 AviviD.open_status = 2;
+                AviviD.transmit_to_iframe(AviviD.open_status);
                 window.history.pushState(null, null, window.top.location.pathname + window.top.location.search);
             } else {
                 e.preventDefault();
-                // console.log('outside do nothing, back, open_status: '+AviviD.open_status);
+                console.log('outside do nothing, back, open_status: '+AviviD.open_status);
                 history.go(-2); // go back twice
                 // do nothing
             }
