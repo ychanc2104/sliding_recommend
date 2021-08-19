@@ -221,7 +221,9 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
         //// disable or enable scrolling bar
         AviviD.set_scrollable = function(state='enable') { // disable: close scrolling, enable: open scrolling
             if (state == 'disable') {
-                window.document.body.style.overflow = "hidden"; // close scrolling        
+                // window.document.body.style.overflow = "hidden"; // close scrolling        
+                window.document.body.style.overflow = "auto"; // open scrolling
+
             } else if (state == 'enable') {
                 window.document.body.style.overflow = "auto"; // open scrolling
             }    
@@ -286,8 +288,8 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     promise = $.when(
                         AviviD.platform!='ios'? AviviD.set_scrollable('disable') : '', // confirm to disable scrolling, don't use this in ios
                         AviviD.likrTimer.clearTimer(), // clear onpage event
-                        element_iframe.animate({bottom: '-15vh'}, 500).promise(),
-                        element_handle.animate({bottom: '-15vh'}, 500).promise()
+                        element_iframe.animate({bottom: '-0vh'}, 500).promise(),
+                        element_handle.animate({bottom: '-0vh'}, 500).promise()
                     ).done( () => {
                         AviviD.css_open_iframe();
                     })
@@ -390,6 +392,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
             AviviD.y_move = 0; // initialize to prevent click in bottom to open
             // console.log(" $(window.parent).on('touchstart'), y_initial: "+AviviD.y_initial+', open_status: '+ AviviD.open_status);
             $(window).on(AviviD.event.move_event, function(e2) {
+                AviviD.platform!='ios'? AviviD.set_scrollable('disable') : '', // confirm to disable scrolling, don't use this in ios
                 AviviD.scroll_height = document.body.scrollHeight; // update scroll height to ensure get correct scrollHeight
                 AviviD.window_Y = window.outerHeight; // update window size of y
                 AviviD.scroll_y = AviviD.get_scrollbar_position(); // update scrolling position
@@ -443,13 +446,16 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                 if ($(document).scrollTop() > AviviD.scroll_y && AviviD.open_status < 1) { // scroll down
                     AviviD.css_close_show_iframe();
                     AviviD.open_status = 0;
-                    // console.log('scroll down, show div');
+                    AviviD.transmit_to_iframe(AviviD.open_status);
                 } else if ($(document).scrollTop() < AviviD.scroll_y && AviviD.open_status < 1) { // scroll up
                     AviviD.css_close_hide_iframe();
                     AviviD.open_status = -1;
-                    // console.log('scroll up, hide div');
-                } else {
-                    AviviD.transmit_to_iframe(AviviD.open_status); // confirm status
+                    AviviD.transmit_to_iframe(AviviD.open_status);
+                } else { // to rescue stuck-window
+                    bottom = parseInt($('#avividai_recommend_iframe').css('bottom').split('px')[0])
+                    if (bottom == 0 && AviviD.open_status != 3) {
+                        AviviD.transmit_to_iframe(2);
+                    }
                 }
             }
             else {
@@ -517,7 +523,6 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                 AviviD.transmit_to_iframe(AviviD.open_status); // update window_Y of iframe
                 AviviD.window_Y = AviviD.platform=='ios'? window.innerHeight : window.outerHeight; // update window_Y
                 let open_iframe_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.03 : AviviD.window_Y*1.05);
-                // let open_iframe_size = AviviD.window_Y*1.03;
                 $('#avividai_recommend_iframe').css({height: open_iframe_size+'px'}); //
                 // console.log('window size in parent5: '+AviviD.window_Y+', window_Y_new: '+window_Y_new+', adjust size to: '+open_iframe_size);
             }

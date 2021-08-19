@@ -398,7 +398,8 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             AviviD.css_fullyopen();
         }
         // to close
-        $('#avivid_close_window_btn').on('click', function(e) {
+        // $('#avivid_close_window_btn').on('click', function(e) {
+        $('#avivid_close_window_btn').on(AviviD.event.up_event, function(e) {    
             AviviD.reback();
             AviviD.css_close_showdiv(AviviD.config.model);
             AviviD.open_status = 0;
@@ -425,7 +426,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         });
 
         // 超連結內容, to open item url
-        $(document).on('click', '.avivid_href_btn', function() {
+        $(document).on('click '+AviviD.event.up_event, '.avivid_href_btn', function() {
             if (AviviD.open_status == 2) {
                 var url   = $(this).attr('data-url');
                 var title = $(this).text().substring(0, 15);
