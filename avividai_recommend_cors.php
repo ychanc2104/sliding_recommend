@@ -38,14 +38,27 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         text-transform: none;
         word-wrap: break-word;
         word-break: break-all;
+        background-color: transparent;
+        overflow: hidden;
     }
     #guess_wrapper, #also_wrapper {
         width: 100vw;
-        height: 83vh;
+        height: 86vh;
         position: fixed;
-        left: 2.5vw;
+        /* top: 14vh; */
+        top: 2vh;
+
+        left: 3.0vw;
         overflow-y: auto;
         background-color: white;
+    }
+
+    #avividai_item_iframe {
+        position: fixed;
+        top: 6vh;        
+        height: 94vh;
+        width: 100vw;
+
     }
 
     /* outside */
@@ -128,7 +141,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
     </style>
 </head>
 
-<body style="background-color: transparent; overflow: hidden;">
+<body>
     <img src="img/left_close_arrow2.png" id="avivid_left_arrow_btn" style="width:35px; height:35px; position: absolute; top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
     <img src="img/right_close_arrow2.png" id="avivid_right_arrow_btn" style="width:35px; height:35px; position: absolute; right: 0;top: 50%; bottom: 50%; z-index: 10000; cursor: pointer;">
     <div class="parameters_wrapper" style="display: none;">
@@ -143,7 +156,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
 
     <div id="avivid_recomm_wrapper" class="container" style="max-width: 100%; margin-left: -1vmax;">
         <!--浮動標題列 rgba(116,116,116,0.5)-->
-        <div class="row" id="avivid_row_header" style="display:none; background-color: rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0px; right: 0; left: 0; margin:0 0 20px 0; height:6vh; z-index:10;">
+        <div class="row" id="avivid_row_header" style="display:none; background-color: rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0px; right: 0; left: 3vw; height:6vh; z-index:10;">
             <div class="col-2">
                 <div id="avivid_reback_btn" style="color: #9f9f9f; text-align: left; height: 60px; line-height: 6vh; z-index:99">
                     <svg xmlns="http://www.w3.org/2000/svg" width="36px" height="36px" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
@@ -176,7 +189,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         <!--推薦內容集合頁-->
         <div class="row" id="avivid_item_div">
             <div class="col">
-                <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -0.5vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
+                <div id="header_wrapper" class="avivid_init_" style="background-color:#ffffff; position: fixed; width: 100%; top: 6vh; right: 0px; left: -0vw; margin:0; margin-bottom: 15px; z-index:10; height: 8vh; line-height: 4vh">
                     <div class="row">
                         <div id="guess_selector" class="col-6 text-center avivid_menu_header_btn" style="padding: 0 3vw 0 6vw">
                             <div class="guess-text" style="font-size: 20px">猜你喜歡</div>
@@ -251,6 +264,10 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
 
         //// show samll div to toggle, open_status=0, scroll down (two version, right and bottom)
         AviviD.css_close_showdiv = function(model='bottom') {
+            $('body').css({"background-color": "transparent"})
+            $('#guess_wrapper').css({top: '2vh'});
+            $('#also_wrapper').css({top: '2vh'});
+            
             $('.avivid_block_overlay').show();
             $('#avivid_row_header').hide();
             $('.avivid_init_').hide(); // show header title bar
@@ -271,6 +288,10 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
 
         //// fully open state (open_status = 2, right = bottom) 
         AviviD.css_fullyopen = function() {
+            $('body').css({"background-color": "white"})
+            $('#guess_wrapper').css({top: '14vh'});
+            $('#also_wrapper').css({top: '14vh'});
+
             $('.avivid_block_overlay').hide(); //半透明遮罩
             $('#avivid_row_header').show(); // hide gray transparent bar
             $('.avivid_init_').show(); // show header title bar
@@ -398,8 +419,8 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             AviviD.css_fullyopen();
         }
         // to close
-        // $('#avivid_close_window_btn').on('click', function(e) {
-        $('#avivid_close_window_btn').on(AviviD.event.up_event, function(e) {    
+        $('#avivid_close_window_btn').on('click', function(e) {
+        // $('#avivid_close_window_btn').on(AviviD.event.up_event, function(e) {    
             AviviD.reback();
             AviviD.css_close_showdiv(AviviD.config.model);
             AviviD.open_status = 0;
@@ -426,7 +447,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         });
 
         // 超連結內容, to open item url
-        $(document).on('click '+AviviD.event.up_event, '.avivid_href_btn', function() {
+        $(document).on('click', '.avivid_href_btn', function() {
             if (AviviD.open_status == 2) {
                 var url   = $(this).attr('data-url');
                 var title = $(this).text().substring(0, 15);
@@ -436,10 +457,13 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                 AviviD.transmit_to_parent(AviviD.open_status, AviviD.config.z_item);
                 // create iframe linked to clicked item page
                 if (AviviD.platform=='ios') { // there are bottom tap in ios               
-                    $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:80vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
+                    // $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:80vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
+                    $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="height:80vh;"></iframe>'); // contents after clicked item 93 for full
                 } else {
-                    $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:93vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
+                    // $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="border:0; width:100%; height:93vh; z-index:1;"></iframe>'); // contents after clicked item 93 for full
+                    $('#avivid_body_iframe').html('<iframe id="avividai_item_iframe" src="'+url+'" style="height:93vh;"></iframe>'); // contents after clicked item 93 for full
                 }
+                $('#avividai_item_iframe').css({"z-index": AviviD.config.z_item});
                 $('#avivid_item_div').hide(); // hidden all items page including header bar
                 $('#avivid_body_iframe').show(); // show iframe of clicked item
                 $('#avivid_reback_btn').css("color", "#ffffff").show();
