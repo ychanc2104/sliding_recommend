@@ -328,12 +328,13 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                         return false;
                     }
                     var html      = '';
-                    var div_class = '';
+                    var div_class = '';  // <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn">`+value['description'].substring(0,32)+`....</a></div>
+                    url = value['url']+"&avivid_sliding_enable=0";
                     html += `
                             <div class="col-6 `+div_class+`">
-                                <a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
-                                <h6 class="title"><a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn">`+value['title']+`</a></h6>
-                                <div class="description"><a href="javascript:void(0)" data-url="`+value['url']+`" class="avivid_href_btn">`+value['description'].substring(0,32)+`....</a></div>
+                                <a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
+                                <h6 class="title"><a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn">`+value['title']+`</a></h6>
+                                <div class="description"><a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn"></a></div>
                             </div>`;
                     $(id_wrapper).append(html);
                     i++;
