@@ -58,20 +58,23 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
             "z_open"           : data.z_open,
             "z_close"          : data.z_close,
             "z_item"           : data.z_item, // set z-index after get into item url
-            "allow_pathname"   : data.allow_pathname.toLowerCase()
+            "allow_pathname"   : data.allow_pathname.toLowerCase(),
+            "allow_regex"      : data.allow_regex
         }
-
+        // l = AviviD.config.allow_regex.length;
+        // AviviD.config.allow_regex = (AviviD.config.allow_regex[0]=='/')? AviviD.config.allow_regex.substr(1,l-2) : AviviD.config.allow_regex;
         AviviD.is_allow = function() {
-            c1 = AviviD.config.allow_pathname == location.pathname.toLowerCase();
-            c2 = AviviD.config.allow_pathname == '';
-            c3 = AviviD.config.href == location.href;
-            c4 = AviviD.config.href_mobile == location.href;
-            if (c1 || c2 || c3 || c4) {
+            pathname_str = location.pathname;
+            regex = new RegExp(AviviD.config.allow_regex)
+            c0 = pathname_str.match(regex) == pathname_str;
+            c1 = AviviD.config.allow_regex == '';
+            if (c0 || c1 ) {
                 return true
             } else {
                 return false
             }
         }
+        console.log('use sliding4: '+AviviD.is_allow()+', allow_regex: '+AviviD.config.allow_regex+', matched pathname: '+location.pathname.match(new RegExp(AviviD.config.allow_regex)));
             // 2-2. check if allow or not?
             if (AviviD.is_allow()) {
             // 3. set and get cookie
@@ -558,4 +561,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
         } // is_allow
     }); // fetch_config
 
+} // check platform
+else if (AviviD.get_urlparam('avivid_preview_sliding') && AviviD.platform == 'pc') {
+    AviviD.loadScript('https://rhea-cache.advividnetwork.com/sliding_recommend/avivid_sliding_recommend_pc.js')
 }
