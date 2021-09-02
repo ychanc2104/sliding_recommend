@@ -6,19 +6,32 @@ AviviD.get_device_type = function() {
     if (useragent.indexOf('iphone') != -1 ) {
         platform = 'ios';
     } 
-    else if (useragent.indexOf('ipad') != -1 ) {
-        platform = 'ipad';
-    } 
+    // else if (useragent.indexOf('ipad') != -1 ) {
+    //     platform = 'ipad';
+    // } 
     else if (useragent.indexOf('android') != -1 ) {
         platform = 'android';
     } else {
         platform = 'pc';
+
+        if ([
+            'iPad Simulator',
+            'iPhone Simulator',
+            'iPod Simulator',
+            'iPad',
+            'iPhone',
+            'iPod'
+          ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document)) { // iPad on iOS 13 detection
+          
+            platform = 'ipad'
+        }
+          
     }
     return platform
 }
 AviviD.platform = AviviD.get_device_type();
 
-if (AviviD.platform == 'ios' || AviviD.platform == 'android') {        
+if (AviviD.platform == 'ios' || AviviD.platform == 'android' || AviviD.platform == 'ipad') {        
     // 2. set config
     var AviviD = typeof(AviviD) == 'undefined'? {} : AviviD;
     AviviD.fetch_config = function() {
@@ -46,11 +59,13 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
         data = data_array[0];
         AviviD.config = {
             "web_id"           : AviviD.web_id, // underwear for e-comm, babyhome for media
-            "css_url"          : data.css_url,
+            // "css_url"          : data.css_url,
             "iframe_url"       : data.iframe_url,
             "href"             : data.href,
             "href_mobile"      : data.href_mob,
             "use_meta"         : data.use_meta, // 0 or 1
+            "scroll_div"       : data.scroll_div, // 0 or 1
+            "pop_bottom"       : data.pop_bottom, // 0 or 1
             "title_exclude"    : data.title_exclude,
             "model"            : data.model, //模式 bottom=底部集合頁, right=右邊集合頁
             "website_type"     : data.website_type, // 1:media, 2:blog, 3:E-commerce
@@ -61,20 +76,21 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
             "allow_pathname"   : data.allow_pathname.toLowerCase(),
             "allow_regex"      : data.allow_regex
         }
-        // l = AviviD.config.allow_regex.length;
-        // AviviD.config.allow_regex = (AviviD.config.allow_regex[0]=='/')? AviviD.config.allow_regex.substr(1,l-2) : AviviD.config.allow_regex;
         AviviD.is_allow = function() {
             pathname_str = location.pathname;
-            regex = new RegExp(AviviD.config.allow_regex)
+            regex = new RegExp(AviviD.config.allow_regex);
+            AviviD.sliding_enable = AviviD.get_urlparam('avivid_sliding_enable')==null ? 1 : AviviD.get_urlparam('avivid_sliding_enable');
             c0 = pathname_str.match(regex) == pathname_str;
             c1 = AviviD.config.allow_regex == '';
-            if (c0 || c1 ) {
+            c2 = AviviD.sliding_enable;
+            criteria = (c0 || c1) && c2;
+            // return criteria;
+            if (criteria==1) {
                 return true
             } else {
                 return false
             }
         }
-        console.log('use sliding4: '+AviviD.is_allow()+', allow_regex: '+AviviD.config.allow_regex+', matched pathname: '+location.pathname.match(new RegExp(AviviD.config.allow_regex)));
             // 2-2. check if allow or not?
             if (AviviD.is_allow()) {
             // 3. set and get cookie
@@ -132,7 +148,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
 
             // 4. insert iframe
             $('body').append('<div id="avivid_iframe_warpper"><div id="avivid_iframe_handle"></div></div>')
-            $('#avivid_iframe_handle').css({width: "100vw", height: "100vh", position: "fixed", bottom: "-100vh", left: "0", "background-color": "black", opacity: "0.15", "border-radius": "1vw", "z-index": parseInt(AviviD.config.z_close)+1});
+            $('#avivid_iframe_handle').css({width: "100vw", height: "100vh", position: "fixed", bottom: "-100vh", left: "0", "background-color": "black", opacity: "0.35", "border-radius": "1vw", "z-index": parseInt(AviviD.config.z_close)+1});
             AviviD.iframe_src = AviviD.config.iframe_url;
             AviviD.iframe_qs = { web_id: AviviD.config.web_id, title_last_watch: AviviD.config.title_last_watch, title_now_watch: AviviD.config.title_now_watch
                                 ,title_exclude: AviviD.config.title_exclude, website_type: AviviD.config.website_type, recommend_type: AviviD.config.recommend_type
@@ -188,6 +204,50 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     'up_event'  : 'touchend'
                 }
             }
+
+            AviviD.ga_accept_web_id_s = {
+                'i3fresh' : 'UA-37210982-1'
+            };
+            // send gtm, AviviD.gtm_event_send('bubble', 'likr', location.href)
+            AviviD.gtm_event_send_s = function(event_name,event_category,event_label){
+                if (AviviD.web_id in AviviD.ga_accept_web_id_s){
+                  AviviD.event_ga_id = AviviD.ga_accept_web_id_s[AviviD.web_id];
+                }else {
+                  return false;
+                }
+                has_gtm = typeof(gtag) == "undefined"? 0:1;
+                if(has_gtm == 1 ){
+                  try {
+                    if ("event_ga_id" in AviviD){
+                      gtag("config", AviviD.event_ga_id);
+                    }
+                    gtag("event",
+                    event_name, {
+                      "event_category" : event_category,
+                      "event_label" : event_label,
+                      "nonInteraction" : true
+                    });
+                  } catch (e) {
+                    AviviD.console_logs(e); 
+                  }
+                }else{ 
+                  try {
+                    if ("event_ga_id" in AviviD){
+                      ga('create', AviviD.event_ga_id, 'auto');
+                    }
+                    ga("send", {
+                      hitType : "event",
+                      eventCategory : event_category,
+                      eventAction : event_name,
+                      eventLabel : event_label,
+                      nonInteraction : true
+                    }); 
+                  } catch (e) {
+                    AviviD.console_logs(e);
+                  }
+                }
+              };
+
 
             //// get touched position according to model( x or y)
             AviviD.get_Pos = function(e) {
@@ -302,7 +362,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                         var open_status = 0;
                     }
                 } else if (model == "bottom") {
-                    if (motion == 'open') { // to open                 
+                    if (motion == 'open') { // to open             
                         promise = $.when(
                             // AviviD.platform!='ios'? AviviD.set_scrollable('disable') : '', // confirm to disable scrolling, don't use this in ios
                             AviviD.likrTimer.clearTimer(), // clear onpage event
@@ -310,6 +370,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                             element_handle.animate({bottom: '-0vh'}, 500).promise()
                         ).done( () => {
                             AviviD.css_open_iframe();
+                            AviviD.gtm_event_send_s('bubble', 'likr_event', location.href);
                         })
                         var open_status = 2;
                     } else { // to close
@@ -330,22 +391,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                 // console.log('animation_promise, open_status: '+open_status);
                 return result;
             }
-            AviviD.is_in_bottom = function() {
-                return AviviD.scroll_y + AviviD.window_Y >= 0.98*AviviD.scroll_height;
-            }
-            //// auto-open in the bottom, only trigger once
-            AviviD.open_in_bottom = false; // true or false
-            setInterval( () => {
-                if (AviviD.is_in_bottom() && !AviviD.open_in_bottom) { // when in the bottom 
-                    // console.log("auto-open");
-                    result = AviviD.animation_promise('open'); // bug only in ios(right: not stop in 1st motion)
-                    AviviD.open_status = result.open_status; // immediately update status to prevent trigger scrolling event, open_status=2
-                    result.promise.done( () => {
-                        AviviD.transmit_to_iframe(AviviD.open_status); // set css after animation is finished
-                    });
-                    AviviD.open_in_bottom = true;
-                }
-            }, 50);
+
             //// for receive data from iframe, use for close,
             $(window).on('message', (e_msg) => {
                 data = e_msg.originalEvent.data;
@@ -364,7 +410,8 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     }); 
                 }            
                 else if (open_status == 3) {
-                    $('#avividai_recommend_iframe').css({"z-index": z_item});
+                    let open_iframe_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.15 : AviviD.window_Y*1.00);
+                    $('#avividai_recommend_iframe').css({"z-index": z_item, "height": open_iframe_size});
                 }
 
             });
@@ -392,11 +439,13 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
             AviviD.css_open_iframe = function() {
                 AviviD.window_Y = window.outerHeight;
                 var open_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.03 : AviviD.window_Y*1.05);
+                open_size = (AviviD.platform=='ipad' ? AviviD.window_Y : open_size);
                 $('#avivid_iframe_handle').css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw', "z-index": parseInt(AviviD.config.z_open)+1});
                 $('#avivid_iframe_handle').css({display:'none'});
                 $('#avividai_recommend_iframe').css({display:'block', 'margin-left': '', left: 0, top: 0, bottom: 0, height: open_size+'px', width: '100vw', "z-index": AviviD.config.z_open}); // required
             }
-
+            let url = new URL('https://example.com?foo=1&bar=2');
+            let params = new URLSearchParams(url.search.slice(1));
             //// listener to show or hide small iframe during scrolling
             AviviD.y_move = null;
             AviviD.y_initial = null;
@@ -418,7 +467,35 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     AviviD.y_move = (AviviD.y_initial - AviviD.y_final);
                 });
             });
-            //// check whether in the bottom
+
+            AviviD.is_in_bottom = function() { // immediately update parameters
+                // return AviviD.scroll_y + AviviD.window_Y >= 0.98*AviviD.scroll_height;
+                // AviviD.scroll_y = AviviD.get_scrollbar_position();
+                // AviviD.window_Y = window.outerHeight;
+                // AviviD.scroll_height = document.body.scrollHeight;
+                return AviviD.scroll_y + AviviD.window_Y >= 0.98*AviviD.scroll_height;
+            }
+            ////////////////////////// auto-open in the bottom, only trigger once /////////////////////////////////
+            if (AviviD.config.pop_bottom) {
+                AviviD.open_in_bottom = false; // true or false
+                // check = AviviD.get_urlparam('avivid_sliding_enable') == null ? 1 : AviviD.get_urlparam('avivid_sliding_enable');
+                setInterval( () => {
+                    if (!AviviD.open_in_bottom) {
+                        AviviD.scroll_y = AviviD.get_scrollbar_position();
+                    }                    
+                    if (AviviD.is_in_bottom() && !AviviD.open_in_bottom) { // when in the bottom 
+                        result = AviviD.animation_promise('open'); // bug only in ios(right: not stop in 1st motion)
+                        AviviD.open_status = result.open_status; // immediately update status to prevent trigger scrolling event, open_status=2
+                        result.promise.done( () => {
+                            AviviD.transmit_to_iframe(AviviD.open_status); // set css after animation is finished
+                        });
+                        AviviD.open_in_bottom = true;
+                    }
+                }, 200);
+            }
+            ////////////////////////// auto-open in the bottom, only trigger once /////////////////////////////////
+
+            ////////////////////////// scroll up and down to hide and show //////////////////////////////
             setInterval( () => {
                 // AviviD.scroll_y = $(document).scrollTop();
                 setTimeout( () => {
@@ -456,7 +533,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     }
                 }
                 // console.log('setInterval, scroll_y: '+ AviviD.scroll_y+'scroll now: '+ $(document).scrollTop()+'open_status: '+AviviD.open_status);
-            }, 2000);
+            }, 3000);
             //// scroll down to show, scroll up to hide
             setInterval( () => {
                 if (!AviviD.is_in_bottom()) {
@@ -478,13 +555,16 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                 else {
                     AviviD.transmit_to_iframe(AviviD.open_status); // confirm status
                 }
-            }, 500)
+            }, 100)
+            ////////////////////////// scroll up and down to hide and show //////////////////////////////
+
             //// mouseup (touchend) event, to control open at the bottom
             $(window).on(AviviD.event.up_event, function(e) {
                 let criteria = AviviD.window_Y/10; // at the bottom and move 1/10 => fully open
                 AviviD.scroll_y = $(document).scrollTop();      
                 if (AviviD.scroll_y_down + AviviD.window_Y >= 0.98*AviviD.scroll_height && AviviD.y_move > criteria) { // at the bottom and move_scroll upward => open iframe               
                     // console.log('parent window, success to open, y_move: '+AviviD.y_move+', criteria: '+ criteria); 
+                    // console.log('test222 open: '+AviviD.open_status+'check: '+check+', enable'+AviviD.get_urlparam('avivid_sliding_enable'));
                     result = AviviD.animation_promise('open'); // bug only in ios(right: not stop in 1st motion)
                     AviviD.open_status = result.open_status; // immediately update status to prevent trigger scrolling event, open_status=2
                     result.promise.done( () => {
@@ -536,7 +616,8 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android') {
                     console.log('window size in parent7: '+AviviD.window_Y+', window_Y_new: '+window_Y_new);
                     AviviD.transmit_to_iframe(AviviD.open_status); // update window_Y of iframe
                     AviviD.window_Y = AviviD.platform=='ios'? window.innerHeight : window.outerHeight; // update window_Y
-                    let open_iframe_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.03 : AviviD.window_Y*1.05);
+                    let open_iframe_size = (AviviD.platform=='ios' ? AviviD.window_Y*1.03 : AviviD.window_Y*1.00);
+                    open_iframe_size = (AviviD.platform=='ipad' ? AviviD.window_Y : open_size);
                     $('#avividai_recommend_iframe').css({height: open_iframe_size+'px'}); //
                     // console.log('window size in parent5: '+AviviD.window_Y+', window_Y_new: '+window_Y_new+', adjust size to: '+open_iframe_size);
                 }

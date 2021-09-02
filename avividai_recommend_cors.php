@@ -62,8 +62,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
     }
 
     /* outside */
-    #avivid_iframe_handle
-    {
+    #avivid_iframe_handle {
         width: 100vw;
         height: 100vh;
         position: fixed;
@@ -137,6 +136,11 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
 
     .avivid_init_ {
         display:none;
+    }
+
+    .item_img {
+        /* height:50% !important; */
+        width:100% !important;
     }
     </style>
 </head>
@@ -236,13 +240,25 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
         if (useragent.indexOf('iphone') != -1 ) {
             platform = 'ios';
         } 
-        else if (useragent.indexOf('ipad') != -1 ) {
-            platform = 'ipad';
-        } 
+        // else if (useragent.indexOf('ipad') != -1 ) {
+        //     platform = 'ipad';
+        // } 
         else if (useragent.indexOf('android') != -1 ) {
             platform = 'android';
         } else {
             platform = 'pc';
+
+            if ([
+                'iPad Simulator',
+                'iPhone Simulator',
+                'iPod Simulator',
+                'iPad',
+                'iPhone',
+                'iPod'
+            ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document)) { // iPad on iOS 13 detection
+            
+                platform = 'ipad'
+            }            
         }
         return platform
         }
@@ -276,12 +292,24 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                 $('#avivid_right_arrow_btn').css({display: 'block', top: '25vh'});
                 $('#avivid_left_arrow_btn').css({display: 'block', top: '25vh'});
                 $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
-                $('.avivid_block_overlay').css({"margin-left": "-1vmax"}); // align product page
+                $('.avivid_block_overlay').css({"margin-left": "-1vmax"}); // align product page                
             } else {
                 $('#avivid_item_div').css({'margin-top': '2vh'});
                 $('#avivid_right_arrow_btn').css({display: 'none'});
                 $('#avivid_left_arrow_btn').css({display: 'none'});
                 $('#avivid_recomm_wrapper').css({"margin-left": "-1vmax"}); // align product page
+                if (AviviD.platform == 'ipad') {
+                    $('#avivid_row_header').css({left: '1vw'})
+                    $('#guess_wrapper').css({left: '1vw'})
+                    $('#guess_selector').css({padding: '0 2vw 0 3vw'})
+                    $('#also_selector').css({padding: '0 4vw 0 1vw'})
+                } else {
+                    $('#avivid_row_header').css({left: '3vw'})
+                    $('#guess_wrapper').css({left: '3vw'})
+                    $('#guess_selector').css({padding: '0 3vw 0 6vw'})
+                    $('#also_selector').css({padding: '0 6vw 0 3vw'})
+                }
+
             }
             $('#avivid_reback_btn').hide();
         }
@@ -299,6 +327,20 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
             $('#avivid_right_arrow_btn').css({display: 'none'});
             $('#avivid_left_arrow_btn').css({display: 'none'});
             $('#avivid_recommend_body_div').css({'overflow-y': 'auto'}) // close iframe scrolling
+            if (AviviD.platform == 'ipad') {
+                $('#avivid_row_header').css({left: '1vw'})
+                $('#guess_wrapper').css({left: '1vw'})
+                $('#guess_selector').css({padding: '0 2vw 0 3vw'})
+                $('#also_wrapper').css({left: '1vw'})
+
+                $('#also_selector').css({padding: '0 4vw 0 1vw'})
+            } else {
+                $('#avivid_row_header').css({left: '3vw'})
+                $('#guess_wrapper').css({left: '3vw'})
+                $('#guess_selector').css({padding: '0 3vw 0 6vw'})
+                $('#also_wrapper').css({left: '3vw'})
+                $('#also_selector').css({padding: '0 6vw 0 3vw'})
+            }
         }
         // initialize open_status
         AviviD.open_status = -1;
@@ -332,7 +374,7 @@ $z_item           = filter_var($_GET["z_item"], FILTER_SANITIZE_STRING);
                     url = value['url']+"&avivid_sliding_enable=0";
                     html += `
                             <div class="col-6 `+div_class+`">
-                                <a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn"><img src="`+value['image_url']+`" class="w-100" style="z-index:1"></a>
+                                <a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn"><img src="`+value['image_url']+`" class="item_img" style="z-index:1"></a>
                                 <h6 class="title"><a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn">`+value['title']+`</a></h6>
                                 <div class="description"><a href="javascript:void(0)" data-url="`+url+`" class="avivid_href_btn"></a></div>
                             </div>`;
