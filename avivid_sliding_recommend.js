@@ -2,13 +2,9 @@
 AviviD.get_device_type = function() {
     var useragent = navigator.userAgent;
     useragent = useragent.toLowerCase();
-    // if (useragent.indexOf('iphone') != -1 || useragent.indexOf('ipad') != -1|| useragent.indexOf('mac') != -1) {
     if (useragent.indexOf('iphone') != -1 ) {
         platform = 'ios';
     } 
-    // else if (useragent.indexOf('ipad') != -1 ) {
-    //     platform = 'ipad';
-    // } 
     else if (useragent.indexOf('android') != -1 ) {
         platform = 'android';
     } else {
@@ -24,8 +20,7 @@ AviviD.get_device_type = function() {
           ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document)) { // iPad on iOS 13 detection
           
             platform = 'ipad'
-        }
-          
+        }          
     }
     return platform
 }
@@ -74,26 +69,124 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android' || AviviD.platform 
             "z_close"          : data.z_close,
             "z_item"           : data.z_item, // set z-index after get into item url
             "allow_pathname"   : data.allow_pathname.toLowerCase(),
-            "allow_regex"      : data.allow_regex
+            "allow_regex"      : data.allow_regex,
+            "css_bottom"       : data.css_bottom
         }
+        AviviD.ga_accept_web_id_s = {
+            'i3fresh' : 'UA-37210982-1'
+        };
+        //// get cookie
+        AviviD.get_Cookie = function(cookie_name="AviviD_last_watch") {
+            let name = cookie_name + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "404";
+        }
+        AviviD.save_abtest_cookie = function() { // session based: 1. (95%)not_in_ab, 2. (2.5%) in_ab_show, 3. (2.5%) in_ab_no
+            var date = new Date();
+            var min = 30;
+            date.setTime(date.getTime() + (min * 60 * 1000));
+            if (Math.random() >= 0.95) { // 5%
+                if (Math.random() >= 0.5) { // 2.5%, in_ab_show
+                    AviviD.AviviD_user = "in_ab_show";
+                } else {
+                    AviviD.AviviD_user = "in_ab_no";
+                }
+            } else { // 95%
+                AviviD.AviviD_user = "not_in_ab";
+            }
+            if (AviviD.get_Cookie("AviviD_user") == "404") { // no AviviD_user => add
+                document.cookie = "AviviD_user="+AviviD.AviviD_user+";expires="+date;
+            }            
+        }
+
+        //// 2.1 save abtest cookie
+        AviviD.save_abtest_cookie();
+        //// 2.2 send abtest event
+        // send gtm, AviviD.gtm_event_send('bubble', 'likr', location.href)
+        AviviD.gtm_event_send_s = function(event_name,event_category,event_label){                
+            if (AviviD.web_id in AviviD.ga_accept_web_id_s){
+                AviviD.event_ga_id = AviviD.ga_accept_web_id_s[AviviD.web_id];
+            }else {
+                return false;
+            }
+            has_gtm = typeof(gtag) == "undefined"? 0:1;
+            if(has_gtm == 1 ){
+                try {
+                if ("event_ga_id" in AviviD){
+                    gtag("config", AviviD.event_ga_id);
+                }
+                gtag("event",
+                event_name, {
+                    "event_category" : event_category,
+                    "event_label" : event_label,
+                    "nonInteraction" : true
+                });
+                } catch (e) {
+                AviviD.console_logs(e); 
+                }
+            }else{ 
+                try {
+                if ("event_ga_id" in AviviD){
+                    ga('create', AviviD.event_ga_id, 'auto');
+                }
+                ga("send", {
+                    hitType : "event",
+                    eventCategory : event_category,
+                    eventAction : event_name,
+                    eventLabel : event_label,
+                    nonInteraction : true
+                }); 
+                } catch (e) {
+                AviviD.console_logs(e);
+                }
+            }
+        };
+
+        AviviD.pre_send_event_abtest = function () {
+            AviviD.abtest_user = AviviD.get_Cookie("AviviD_user");
+            if ((AviviD.web_id in AviviD.ga_accept_web_id_s)) {
+                if (AviviD.abtest_user == "in_ab_show") {
+                    AviviD.gtm_event_send_s('abtest_a', 'likr_event', location.href); // abtest_show(abtest_a, 2.5%) , abtest_no(abtest_b, 2.5%), not_in_ab(abtest_c, 95%)
+                } else if (AviviD.abtest_user == "in_ab_no") {
+                    AviviD.gtm_event_send_s('abtest_b', 'likr_event', location.href); 
+                } else if (AviviD.abtest_user == "not_in_ab") {
+                    AviviD.gtm_event_send_s('abtest_c', 'likr_event', location.href); 
+                }
+            }
+        }
+        AviviD.pre_send_event_abtest();
+        
         AviviD.is_allow = function() {
             pathname_str = location.pathname;
             regex = new RegExp(AviviD.config.allow_regex);
             AviviD.sliding_enable = AviviD.get_urlparam('avivid_sliding_enable')==null ? 1 : AviviD.get_urlparam('avivid_sliding_enable');
             c0 = pathname_str.match(regex) == pathname_str;
             c1 = AviviD.config.allow_regex == '';
-            c2 = AviviD.sliding_enable;
-            criteria = (c0 || c1) && c2;
-            // return criteria;
-            if (criteria==1) {
-                return true
+            c2 = (AviviD.sliding_enable==1 ? true : false);
+            AviviD_user = AviviD.get_Cookie("AviviD_user")
+            if ((AviviD_user == "in_ab_no") && (AviviD.web_id in AviviD.ga_accept_web_id_s)) {
+                c3 = false;
+                console.log('in abtest and dont load iframe')
             } else {
-                return false
+                c3 = true;
             }
+            criteria = (c0 || c1) && c2 && c3;
+            console.log('criteria: '+criteria);
+            return criteria;
         }
             // 2-2. check if allow or not?
             if (AviviD.is_allow()) {
-            // 3. set and get cookie
+            // 3. set and get watched title cookie
             //// get item title
             AviviD.get_item_title = function() {
                 let obj_og = document.querySelector("meta[property='og:title']");
@@ -111,22 +204,7 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android' || AviviD.platform 
                 document.cookie = "AviviD_last_watch="+encodeURI(title_last_watch); // ios not support for chinese (ASCII), so encode first
                 document.cookie = "AviviD_now_watch="+encodeURI(title_now_watch);
             }
-            //// get cookie
-            AviviD.get_Cookie = function(cookie_name="AviviD_last_watch") {
-                let name = cookie_name + "=";
-                let decodedCookie = decodeURIComponent(document.cookie);
-                let ca = decodedCookie.split(';');
-                for(let i = 0; i <ca.length; i++) {
-                    let c = ca[i];
-                    while (c.charAt(0) == ' ') {
-                        c = c.substring(1);
-                    }
-                    if (c.indexOf(name) == 0) {
-                        return c.substring(name.length, c.length);
-                    }
-                }
-                return "404";
-            }
+
             AviviD.update_cookie = function() {
                 var title_last_watch = decodeURI(AviviD.get_Cookie("AviviD_last_watch"));
                 var title_now_watch = decodeURI(AviviD.get_Cookie("AviviD_now_watch"));
@@ -143,8 +221,9 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android' || AviviD.platform 
                 AviviD.config.title_last_watch = AviviD.get_Cookie("AviviD_last_watch");
                 AviviD.config.title_now_watch = AviviD.get_Cookie("AviviD_now_watch");           
             }
-            //// store title into cookie
+            //// store watched title into cookie
             AviviD.update_cookie();
+
 
             // 4. insert iframe
             $('body').append('<div id="avivid_iframe_warpper"><div id="avivid_iframe_handle"></div></div>')
@@ -204,49 +283,6 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android' || AviviD.platform 
                     'up_event'  : 'touchend'
                 }
             }
-
-            AviviD.ga_accept_web_id_s = {
-                'i3fresh' : 'UA-37210982-1'
-            };
-            // send gtm, AviviD.gtm_event_send('bubble', 'likr', location.href)
-            AviviD.gtm_event_send_s = function(event_name,event_category,event_label){
-                if (AviviD.web_id in AviviD.ga_accept_web_id_s){
-                  AviviD.event_ga_id = AviviD.ga_accept_web_id_s[AviviD.web_id];
-                }else {
-                  return false;
-                }
-                has_gtm = typeof(gtag) == "undefined"? 0:1;
-                if(has_gtm == 1 ){
-                  try {
-                    if ("event_ga_id" in AviviD){
-                      gtag("config", AviviD.event_ga_id);
-                    }
-                    gtag("event",
-                    event_name, {
-                      "event_category" : event_category,
-                      "event_label" : event_label,
-                      "nonInteraction" : true
-                    });
-                  } catch (e) {
-                    AviviD.console_logs(e); 
-                  }
-                }else{ 
-                  try {
-                    if ("event_ga_id" in AviviD){
-                      ga('create', AviviD.event_ga_id, 'auto');
-                    }
-                    ga("send", {
-                      hitType : "event",
-                      eventCategory : event_category,
-                      eventAction : event_name,
-                      eventLabel : event_label,
-                      nonInteraction : true
-                    }); 
-                  } catch (e) {
-                    AviviD.console_logs(e);
-                  }
-                }
-              };
 
 
             //// get touched position according to model( x or y)
@@ -417,12 +453,14 @@ if (AviviD.platform == 'ios' || AviviD.platform == 'android' || AviviD.platform 
             });
             //// show samll div to toggle, open_status=0, scroll up (two version, right and bottom)
             AviviD.css_close_show_iframe = function() {
+                
                 if (AviviD.config.model == 'right') {
                     $('#avividai_recommend_iframe').css({display:'block', 'margin-left': '', left: '90vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw', "z-index": AviviD.config.z_close}); // required
                     $('#avivid_iframe_handle').css({display:'block', 'margin-left': '', left: '90vw', top:'40vh', bottom: 0, height: '100vh', width: '100vw', "z-index": parseInt(AviviD.config.z_close)+1}); // required
                 } else {
-                    $('#avividai_recommend_iframe').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw', "z-index": AviviD.config.z_close});
-                    $('#avivid_iframe_handle').css({display:'block', top:'', bottom: '-95vh', height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw', "z-index": parseInt(AviviD.config.z_close)+1});
+                    let css_bottom = AviviD.config.css_bottom;
+                    $('#avividai_recommend_iframe').css({display:'block', top:'', bottom: css_bottom, height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw', "z-index": AviviD.config.z_close});
+                    $('#avivid_iframe_handle').css({display:'block', top:'', bottom: css_bottom, height: '100vh', width: '100vw', left: 0, 'border-radius': '1vw', "z-index": parseInt(AviviD.config.z_close)+1});
                 }
             }
             //// hidden samll div to toggle, open_status=0, scroll up (two version, right and bottom)
